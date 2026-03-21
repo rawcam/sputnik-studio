@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Sputnik Studio v5.2.4 — AV System Designer</title>
+    <title>Sputnik Studio v5.3.2 — AV System Designer</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
+        /* ========== СТИЛИ (полностью из v5.2.6) ========== */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
         :root {
             --bg-page: #f4f7fb; --bg-panel: #ffffff; --text-primary: #1e2b3c; --text-secondary: #4a5a6e;
@@ -83,15 +84,8 @@
         .sidebar.collapsed .section-header span { display: none; }
         .section-header i:last-child { transition: transform 0.2s; font-size: 0.7rem; }
         .section-header.collapsed i:last-child { transform: rotate(-90deg); }
-        /* Свёрнутая панель: скрываем стрелку, показываем основную иконку */
-        .sidebar.collapsed .section-header i:last-child {
-            display: none;
-        }
-        .sidebar.collapsed .section-header i:first-child {
-            display: inline-block;
-            margin-right: 0;
-        }
-        /* Подсветка активного (развёрнутого) аккордеона */
+        .sidebar.collapsed .section-header i:last-child { display: none; }
+        .sidebar.collapsed .section-header i:first-child { display: inline-block; margin-right: 0; }
         .section-header.active {
             background: var(--accent);
             color: white;
@@ -315,6 +309,9 @@
             box-shadow: var(--shadow);
             font-family: inherit;
         }
+        .modal-content h2, .modal-content h3 {
+            margin-bottom: 24px;
+        }
         .modal-content select, .modal-content input {
             background: var(--bg-panel);
             border: 1px solid var(--border-light);
@@ -324,7 +321,7 @@
             font-size: 0.8rem;
             font-family: inherit;
             width: 100%;
-            margin-bottom: 12px;
+            margin-bottom: 16px;
         }
         .modal-content select:focus, .modal-content input:focus {
             outline: none;
@@ -332,6 +329,12 @@
         }
         .modal-content button {
             margin-right: 8px;
+        }
+        .modal-buttons {
+            margin-top: 24px;
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
         }
         .modal-close { float: right; font-size: 1.2rem; cursor: pointer; color: var(--text-secondary); }
         @media (max-width: 768px) {
@@ -342,7 +345,6 @@
             .segments-row { flex-direction: column; }
             .modal-content { min-width: 90%; margin: 20px; }
         }
-        /* Тёмная тема для форм и чекбоксов */
         body.dark select,
         body.dark input:not([type="checkbox"]):not([type="radio"]) {
             background: var(--bg-panel);
@@ -352,6 +354,31 @@
         body.dark input[type="checkbox"] {
             accent-color: var(--accent);
             background-color: transparent;
+            filter: none;
+        }
+        body.dark input[type="checkbox"] {
+            appearance: none;
+            width: 1em;
+            height: 1em;
+            border: 1px solid var(--border-light);
+            background: var(--bg-panel);
+            position: relative;
+            vertical-align: middle;
+            margin-right: 4px;
+        }
+        body.dark input[type="checkbox"]:checked {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+        body.dark input[type="checkbox"]:checked::after {
+            content: "✓";
+            color: white;
+            position: absolute;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 0.7rem;
+            line-height: 1;
         }
         body.dark .usb-control-wrapper label,
         body.dark .poe-control-wrapper label,
@@ -359,7 +386,6 @@
         body.dark .power-control-wrapper label {
             color: var(--text-primary);
         }
-        /* Свёрнутая панель: кнопки без текста */
         .sidebar.collapsed .btn-secondary span,
         .sidebar.collapsed .btn-danger span {
             display: none;
@@ -441,6 +467,17 @@
             </div>
         </div>
 
+        <!-- НОВЫЙ АККОРДЕОН: Эргономика ЭКП (пока заглушка) -->
+        <div class="sidebar-section" id="ergoSection">
+            <div class="section-header" data-section="ergo"><span><i class="fas fa-chalkboard-user"></i> Эргономика ЭКП</span><i class="fas fa-angle-down"></i></div>
+            <div class="section-content" id="ergoContent">
+                <div style="font-size:0.75rem; color:var(--text-secondary); padding:8px 0; text-align:center;">
+                    ⚙️ Калькулятор в разработке<br>
+                    Скоро здесь появится расчёт расстояния до экрана по методике ITPP.
+                </div>
+            </div>
+        </div>
+
         <!-- TRACTS аккордеон -->
         <div class="sidebar-section" id="pathsSection">
             <div class="section-header" data-section="paths"><span><i class="fas fa-road"></i> TRACTS</span><i class="fas fa-angle-down"></i></div>
@@ -480,7 +517,7 @@
             </div>
         </div>
 
-        <div class="sidebar-footer">Sputnik Studio v5.2.4<br>© 2026</div>
+        <div class="sidebar-footer">Sputnik Studio v5.3.2<br>© 2026</div>
     </div>
 
     <div class="main-content">
@@ -495,7 +532,7 @@
         <h3>Добавить устройство</h3>
         <select id="deviceTypeSelect"></select>
         <select id="deviceModelSelect"></select>
-        <div class="modal-buttons" style="margin-top:20px; display:flex; gap:10px; justify-content:flex-end;">
+        <div class="modal-buttons">
             <button class="btn-primary" id="modalAddBtn">Добавить</button>
             <button class="btn-secondary" id="modalCancelBtn">Отмена</button>
         </div>
@@ -505,24 +542,9 @@
 <div id="docModal" class="modal">
     <div class="modal-content">
         <span class="modal-close" id="closeDocModal">&times;</span>
-        <h2>Документация Sputnik Studio v5.2.4</h2>
+        <h2>Документация Sputnik Studio v5.3.2</h2>
         <p><strong>Sputnik Studio</strong> — профессиональный инструмент для расчёта задержек видеосигнала, сетевой нагрузки и энергопотребления в системах AV over IP, матричной коммутации, LED-экранах и видеостенах.</p>
-        <h3>1. Основные разделы</h3>
-        <ul>
-            <li><strong>VIDEO</strong>: разрешение, субдискретизация, FPS, цветовое пространство, глубина цвета — влияют на битрейт и задержку кодеков.</li>
-            <li><strong>NETWORK</strong>: среда передачи, Multicast, QoS, тип сети, синхронизация, резервирование — влияют на пропускную способность и задержку.</li>
-            <li><strong>LED</strong>: выбор модели по шагу пикселя, размеры в кабинетах (600×337.5 мм) или метрах. Расчёт площади, разрешения в пикселях и потребляемой мощности.</li>
-            <li><strong>SOUND</strong>: микрофонные каналы, тип DSP, мощность усилителей, задержка DSP.</li>
-        </ul>
-        <h3>2. Тракты</h3>
-        <p>Каждый тракт — независимый путь прохождения сигнала. В тракте можно добавлять устройства в сегменты «Вход» (источники, передатчики), «Коммутация» (матрицы, сетевые коммутаторы), «Выход» (приёмники, дисплеи). Для каждого устройства настраиваются PoE, Ethernet, USB, мощность.</p>
-        <h3>3. Расчёт задержки</h3>
-        <p>Общая задержка тракта = сумма задержек всех устройств в сегментах + задержки коммутаторов. Для кодеков применяется коэффициент разрешения и субдискретизации. Результат отображается в миллисекундах и кадрах (при текущем FPS).</p>
-        <h3>4. Сетевая нагрузка и питание</h3>
-        <p>Суммарный битрейт, загрузка сети, занятость портов, PoE нагрузка, общая мощность и тепловыделение (BTU/ч) отображаются в виджетах боковой панели.</p>
-        <h3>5. Управление проектом</h3>
-        <p>Кнопки «Новый тракт», «Сброс проекта» (с сохранением в localStorage), «Печать отчёта», «Документация», «Инструкция».</p>
-        <button class="btn-primary" id="downloadDocPdf" style="margin-top:20px;"><i class="fas fa-download"></i> Скачать PDF</button>
+        <div class="modal-buttons"><button class="btn-primary" id="downloadDocPdf">Скачать PDF</button></div>
     </div>
 </div>
 
@@ -530,26 +552,8 @@
     <div class="modal-content">
         <span class="modal-close" id="closeGuideModal">&times;</span>
         <h2>Инструкция пользователя</h2>
-        <h3>1. Начало работы</h3>
-        <p>Нажмите «Новый тракт» – появится карточка тракта с тремя колонками: Вход, Коммутация, Выход.</p>
-        <h3>2. Добавление устройств</h3>
-        <ul>
-            <li><strong>Вход</strong>: добавьте источник (ПК, камера) и передатчик (Tx).</li>
-            <li><strong>Коммутация</strong>: добавьте матричный коммутатор или сетевой коммутатор.</li>
-            <li><strong>Выход</strong>: добавьте приёмник (Rx) и средство отображения (дисплей, LED-экран).</li>
-        </ul>
-        <h3>3. Настройка устройств</h3>
-        <ul>
-            <li><strong>USB</strong>: для передатчиков/приёмников – добавляет задержку и увеличивает битрейт.</li>
-            <li><strong>PoE</strong>: для поддерживаемых устройств – питание через сеть, занимает порт коммутатора.</li>
-            <li><strong>Ethernet</strong>: для IP-устройств без PoE – занимает порт, питается от 220В.</li>
-            <li><strong>Мощность (Вт)</strong>: ручная настройка.</li>
-        </ul>
-        <h3>4. Сворачивание и перемещение</h3>
-        <p>Карточки устройств можно сворачивать/разворачивать кнопкой <i class="fas fa-compress"></i> / <i class="fas fa-expand"></i>. Боковую панель можно свернуть в компактный режим (только иконки) кнопкой <i class="fas fa-chevron-left"></i>.</p>
-        <h3>5. Сохранение и отчёты</h3>
-        <p>Используйте кнопку «Сброс проекта» – перед сбросом можно сохранить текущий проект в localStorage. «Печать отчёта» создаст детальную таблицу для документации.</p>
-        <button class="btn-primary" id="downloadGuidePdf" style="margin-top:20px;"><i class="fas fa-download"></i> Скачать PDF</button>
+        <p>Используйте боковую панель для создания трактов и настройки устройств. Настройки VIDEO, NETWORK, LED, SOUND влияют на расчёты. В разделе «Эргономика ЭКП» скоро появится калькулятор расстояния до экрана.</p>
+        <div class="modal-buttons"><button class="btn-primary" id="downloadGuidePdf">Скачать PDF</button></div>
     </div>
 </div>
 
@@ -558,16 +562,17 @@
         <span class="modal-close" id="closeResetModal">&times;</span>
         <h3>Сброс проекта</h3>
         <p>Вы действительно хотите сбросить все данные? Текущий проект будет удалён.</p>
-        <p>Вы можете сохранить проект перед сбросом:</p>
-        <button class="btn-primary" id="saveBeforeResetBtn" style="margin-right: 10px;"><i class="fas fa-save"></i> Сохранить проект</button>
-        <button class="btn-danger" id="confirmResetBtn" style="background: var(--danger); color: white; border: none; border-radius: 30px; padding: 6px 16px; cursor: pointer;">Сбросить без сохранения</button>
-        <button class="btn-secondary" id="cancelResetBtn">Отмена</button>
+        <div class="modal-buttons">
+            <button class="btn-primary" id="saveBeforeResetBtn">Сохранить проект</button>
+            <button class="btn-danger" id="confirmResetBtn">Сбросить без сохранения</button>
+            <button class="btn-secondary" id="cancelResetBtn">Отмена</button>
+        </div>
     </div>
 </div>
 
 <script>
 (function() {
-    // ========== БАЗА МОДЕЛЕЙ (с уточнёнными шагами LED) ==========
+    // ======================== БАЗА МОДЕЛЕЙ ========================
     const modelDB = {
         source: [
             { name: "Типовой ПК", latency: 5, poe: false, powerW: 200, icon: "fa-desktop", hasNetwork: true, shortPrefix: "PC" },
@@ -609,9 +614,9 @@
             { name: "Управляемый L2, 24 порта, 1 Гбит/с, без PoE", ports: 24, speed: 1000, backplane: 48, poe: false, poeStandard: "", poeBudget: 0, switchingLatency: 0.2, powerW: 50, shortPrefix: "SW" },
             { name: "Управляемый L2, 48 портов, 1 Гбит/с, без PoE", ports: 48, speed: 1000, backplane: 96, poe: false, poeStandard: "", poeBudget: 0, switchingLatency: 0.2, powerW: 80, shortPrefix: "SW" },
             { name: "Управляемый L3, 24 порта, 10 Гбит/с, без PoE", ports: 24, speed: 10000, backplane: 240, poe: false, poeStandard: "", poeBudget: 0, switchingLatency: 0.15, powerW: 100, shortPrefix: "SW" },
-            { name: "PoE-коммутатор, 24 порта, 1 Гбит/с, 802.3af", ports: 24, speed: 1000, backplane: 48, poe: false, poeStandard: "802.3af", poeBudget: 370, switchingLatency: 0.2, powerW: 150, shortPrefix: "SW" },
-            { name: "PoE-коммутатор, 48 портов, 1 Гбит/с, 802.3at", ports: 48, speed: 1000, backplane: 96, poe: false, poeStandard: "802.3at", poeBudget: 1440, switchingLatency: 0.2, powerW: 250, shortPrefix: "SW" },
-            { name: "PoE-коммутатор, 24 порта, 10 Гбит/с, 802.3bt", ports: 24, speed: 10000, backplane: 240, poe: false, poeStandard: "802.3bt", poeBudget: 2160, switchingLatency: 0.15, powerW: 300, shortPrefix: "SW" },
+            { name: "PoE-коммутатор, 24 порта, 1 Гбит/с, 802.3af (15.4 Вт/порт)", ports: 24, speed: 1000, backplane: 48, poe: false, poeStandard: "802.3af", poeBudget: 370, switchingLatency: 0.2, powerW: 150, shortPrefix: "SW" },
+            { name: "PoE-коммутатор, 48 портов, 1 Гбит/с, 802.3at (30 Вт/порт)", ports: 48, speed: 1000, backplane: 96, poe: false, poeStandard: "802.3at", poeBudget: 1440, switchingLatency: 0.2, powerW: 250, shortPrefix: "SW" },
+            { name: "PoE-коммутатор, 24 порта, 10 Гбит/с, 802.3bt (90 Вт/порт)", ports: 24, speed: 10000, backplane: 240, poe: false, poeStandard: "802.3bt", poeBudget: 2160, switchingLatency: 0.15, powerW: 300, shortPrefix: "SW" },
             { name: "Неуправляемый, 8 портов, 1 Гбит/с", ports: 8, speed: 1000, backplane: 16, poe: false, poeStandard: "", poeBudget: 0, switchingLatency: 0.25, powerW: 20, shortPrefix: "SW" }
         ],
         splitter: [ { name: "Пассивный сплиттер", latency: 0.01, poe: false, powerW: 0, icon: "fa-code-branch", hasNetwork: false, shortPrefix: "SPL" },
@@ -628,6 +633,7 @@
             { name: "LED P0.8", pitch: 0.8, powerPerSqm: 480, shortPrefix: "LED", icon: "fa-border-all" },
             { name: "LED P0.9", pitch: 0.9, powerPerSqm: 460, shortPrefix: "LED", icon: "fa-border-all" },
             { name: "LED P1.2", pitch: 1.2, powerPerSqm: 420, shortPrefix: "LED", icon: "fa-border-all" },
+            { name: "LED P1.5", pitch: 1.5, powerPerSqm: 390, shortPrefix: "LED", icon: "fa-border-all" },
             { name: "LED P1.56", pitch: 1.56, powerPerSqm: 380, shortPrefix: "LED", icon: "fa-border-all" },
             { name: "LED P2.5", pitch: 2.5, powerPerSqm: 350, shortPrefix: "LED", icon: "fa-border-all" },
             { name: "LED P3.91", pitch: 3.91, powerPerSqm: 320, shortPrefix: "LED", icon: "fa-border-all" },
@@ -719,7 +725,7 @@
             if (!device.ethernet && !device.poeEnabled) return false;
             const requirePoE = device.poeEnabled === true;
             const result = this.findAvailableSwitch(device, requirePoE);
-            if (!result) { alert(`Нет свободных портов${requirePoE ? ' / PoE' : ''} для ${device.name}.`); return false; }
+            if (!result) { alert(`Нет свободных портов${requirePoE ? ' и/или недостаточно PoE-бюджета' : ''} для устройства ${device.name}.`); return false; }
             const { sw, portNumber } = result;
             const port = sw.ports.find(p => p.number === portNumber);
             if (port) port.deviceId = device.id;
@@ -872,7 +878,6 @@
         return parts.join(', ');
     }
 
-    // Функция рендеринга карточек устройств с логикой переключения PoE/Ethernet
     function renderDevicesInSegment(devices) {
         let html='';
         devices.forEach(dev=>{
@@ -1387,7 +1392,7 @@
     document.getElementById('closeResetModal').addEventListener('click',()=>document.getElementById('resetModal').style.display='none');
     document.getElementById('cancelResetBtn').addEventListener('click',()=>document.getElementById('resetModal').style.display='none');
     document.getElementById('saveBeforeResetBtn').addEventListener('click',()=>{
-        const projectData={version:'5.2.4',paths,projectSwitches,globalSettings,ledConfig,soundConfig};
+        const projectData={version:'5.3.2',paths,projectSwitches,globalSettings,ledConfig,soundConfig};
         localStorage.setItem('sputnik_project',JSON.stringify(projectData));
         alert('Проект сохранён в localStorage');
         resetProject();
@@ -1411,13 +1416,19 @@
     if(localStorage.getItem('sidebarCollapsed')==='true') setSidebarCollapsed(true);
 
     function initAccordions(){
-        const sections=['video','network','led','sound','paths','networkStats','powerStats','manage'];
+        const sections=['video','network','led','sound','paths','networkStats','powerStats','manage','ergo'];
         sections.forEach(sectionId=>{
             const header=document.querySelector(`.section-header[data-section="${sectionId}"]`);
             const content=document.getElementById(`${sectionId}Content`);
             if(!header||!content) return;
             const collapsedKey=`section_${sectionId}_collapsed`;
-            const isCollapsed=localStorage.getItem(collapsedKey)==='true';
+            let isCollapsed = localStorage.getItem(collapsedKey);
+            if (isCollapsed === null) {
+                isCollapsed = true;
+                localStorage.setItem(collapsedKey, 'true');
+            } else {
+                isCollapsed = (isCollapsed === 'true');
+            }
             if(isCollapsed){
                 content.classList.add('collapsed');
                 header.classList.add('collapsed');
