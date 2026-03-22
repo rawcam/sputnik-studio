@@ -1139,7 +1139,7 @@
                 </div>
                 <div class="segments-row">
                     <div class="segment" data-path-id="${path.id}" data-segment="source">
-                        <div class="segment-header"><span>Вход</span><button class="add-device-btn" data-path-id="${path.id}" data-segment="source"><i class="fas fa-plus-circle"></i></button></div>
+                        <div class="segment-header"><span>НАЧАЛО ТРАКТА</span><button class="add-device-btn" data-path-id="${path.id}" data-segment="source"><i class="fas fa-plus-circle"></i></button></div>
                         <div class="devices-container">${renderDevicesInSegment(path.sourceDevices)}</div>
                     </div>
                     <div class="segment" data-path-id="${path.id}" data-segment="switch">
@@ -1147,7 +1147,7 @@
                         <div class="devices-container">${renderDevicesInSegment(projectSwitches)}</div>
                     </div>
                     <div class="segment" data-path-id="${path.id}" data-segment="sink">
-                        <div class="segment-header"><span>Выход</span><button class="add-device-btn" data-path-id="${path.id}" data-segment="sink"><i class="fas fa-plus-circle"></i></button></div>
+                        <div class="segment-header"><span>КОНЕЦ ТРАКТА</span><button class="add-device-btn" data-path-id="${path.id}" data-segment="sink"><i class="fas fa-plus-circle"></i></button></div>
                         <div class="devices-container">${renderDevicesInSegment(path.sinkDevices)}</div>
                     </div>
                 </div>
