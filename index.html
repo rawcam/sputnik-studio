@@ -27,8 +27,6 @@
             background: var(--bg-panel);
             border-right: 1px solid var(--border-light);
             flex-shrink: 0;
-            display: flex;
-            flex-direction: column;
             position: sticky;
             top: 0;
             height: 100vh;
@@ -185,10 +183,63 @@
             outline: none;
             border-color: var(--accent);
         }
-        .video-settings, .network-settings, .led-settings, .sound-settings {
+        .video-settings, .network-settings {
             display: flex;
             flex-direction: column;
             gap: 6px;
+        }
+        /* Стили для кнопок выбора режима LED */
+        .led-mode-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .led-mode-btn {
+            background: var(--card-bg);
+            border: 1px solid var(--border-light);
+            border-radius: 30px;
+            padding: 8px 12px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            text-align: center;
+            transition: 0.2s;
+            color: var(--text-primary);
+        }
+        .led-mode-btn.active {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+        .led-mode-btn:hover:not(.active) {
+            background: var(--bg-panel);
+            border-color: var(--accent);
+        }
+        .sound-mode-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .sound-mode-btn {
+            background: var(--card-bg);
+            border: 1px solid var(--border-light);
+            border-radius: 30px;
+            padding: 8px 12px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            text-align: center;
+            transition: 0.2s;
+            color: var(--text-primary);
+        }
+        .sound-mode-btn.active {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+        .sound-mode-btn:hover:not(.active) {
+            background: var(--bg-panel);
+            border-color: var(--accent);
         }
         .sidebar-footer {
             margin-top: auto;
@@ -595,6 +646,50 @@
             font-weight: bold;
             color: var(--accent);
         }
+        /* Стили для звуковых и LED калькуляторов */
+        .calc-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-light);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .calc-card h3 {
+            margin-bottom: 16px;
+            color: var(--accent);
+            font-size: 1.1rem;
+        }
+        .calc-card .setting {
+            margin-bottom: 12px;
+        }
+        .calc-card .widget-item {
+            margin-top: 16px;
+            font-size: 0.9rem;
+        }
+        .calc-card .widget-value {
+            font-size: 1.2rem;
+        }
+        .calc-card .result-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 12px;
+        }
+        .calc-card .result-item {
+            background: var(--bg-panel);
+            padding: 8px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .calc-card .result-label {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+        }
+        .calc-card .result-value {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--accent);
+        }
     </style>
 </head>
 <body>
@@ -610,7 +705,11 @@
 
         <!-- VIDEO аккордеон -->
         <div class="sidebar-section" id="videoSection">
-            <div class="section-header" data-section="video"><span><i class="fas fa-video"></i> VIDEO</span><i class="fas fa-angle-down"></i></div>
+            <div class="section-header" data-section="video">
+                <i class="fas fa-video"></i>
+                <span>VIDEO</span>
+                <i class="fas fa-angle-down"></i>
+            </div>
             <div class="section-content" id="videoContent">
                 <div class="video-settings">
                     <div class="setting"><label>Разрешение:</label><select id="resolutionSidebar"><option value="1080p">1080p</option><option value="4K" selected>4K</option><option value="8K">8K</option></select></div>
@@ -624,7 +723,11 @@
 
         <!-- NETWORK аккордеон -->
         <div class="sidebar-section" id="networkSection">
-            <div class="section-header" data-section="network"><span><i class="fas fa-network-wired"></i> NETWORK</span><i class="fas fa-angle-down"></i></div>
+            <div class="section-header" data-section="network">
+                <i class="fas fa-network-wired"></i>
+                <span>NETWORK</span>
+                <i class="fas fa-angle-down"></i>
+            </div>
             <div class="section-content" id="networkContent">
                 <div class="network-settings">
                     <div class="setting"><label>Среда передачи:</label><select id="globalCable"><option value="Cat5e">Cat5e</option><option value="Cat6" selected>Cat6</option><option value="Cat6a">Cat6a</option><option value="Cat7">Cat7</option><option value="Cat8">Cat8</option><option value="OM3">Оптика OM3</option><option value="wireless">Беспровод</option></select></div>
@@ -637,47 +740,57 @@
             </div>
         </div>
 
-        <!-- LED аккордеон -->
+        <!-- LED аккордеон (только выбор режима) -->
         <div class="sidebar-section" id="ledSection">
-            <div class="section-header" data-section="led"><span><i class="fas fa-border-all"></i> LED</span><i class="fas fa-angle-down"></i></div>
+            <div class="section-header" data-section="led">
+                <i class="fas fa-border-all"></i>
+                <span>LED</span>
+                <i class="fas fa-angle-down"></i>
+            </div>
             <div class="section-content" id="ledContent">
-                <div class="led-settings">
-                    <div class="setting"><label>Модель (шаг, мм):</label><select id="ledModelSelect"></select></div>
-                    <div class="setting"><label>Кабинетов (шир.):</label><input type="number" id="ledWidthCabinets" value="1" min="1" step="1"></div>
-                    <div class="setting"><label>Кабинетов (выс.):</label><input type="number" id="ledHeightCabinets" value="1" min="1" step="1"></div>
-                    <div class="setting"><label>Или ширина (м):</label><input type="number" id="ledWidthMeters" value="0" step="0.1"></div>
-                    <div class="setting"><label>Или высота (м):</label><input type="number" id="ledHeightMeters" value="0" step="0.1"></div>
-                    <div class="setting"><label>Площадь (м²):</label><span id="ledArea">0.00</span></div>
-                    <div class="setting"><label>Разрешение (пикс.):</label><span id="ledResolution">0x0</span></div>
-                    <div class="setting"><label>Потребление (Вт):</label><span id="ledPower">0</span></div>
+                <div class="led-mode-buttons">
+                    <button class="led-mode-btn" data-mode="cabinets">📐 По кабинетам</button>
+                    <button class="led-mode-btn" data-mode="resolution">🎯 По разрешению</button>
+                    <button class="led-mode-btn" data-mode="stitching">🖥 Сшивка экранов</button>
                 </div>
             </div>
         </div>
 
-        <!-- SOUND аккордеон -->
+        <!-- SOUND аккордеон (только выбор режима) -->
         <div class="sidebar-section" id="soundSection">
-            <div class="section-header" data-section="sound"><span><i class="fas fa-headphones"></i> SOUND</span><i class="fas fa-angle-down"></i></div>
+            <div class="section-header" data-section="sound">
+                <i class="fas fa-headphones"></i>
+                <span>SOUND</span>
+                <i class="fas fa-angle-down"></i>
+            </div>
             <div class="section-content" id="soundContent">
-                <div class="sound-settings">
-                    <div class="setting"><label>Микрофонные каналы:</label><input type="number" id="micChannels" value="0" min="0" step="1"></div>
-                    <div class="setting"><label>Тип DSP:</label><select id="dspType"><option value="builtin">Встроенный</option><option value="external">Внешний</option></select></div>
-                    <div class="setting"><label>Мощность усилителей (Вт):</label><input type="number" id="ampPower" value="0" min="0" step="10"></div>
-                    <div class="setting"><label>Задержка DSP (мс):</label><input type="number" id="dspLatency" value="0" min="0" step="0.5"></div>
+                <div class="sound-mode-buttons">
+                    <button class="sound-mode-btn" data-mode="spl">🔊 SPL на расстоянии</button>
+                    <button class="sound-mode-btn" data-mode="drop">📉 Падение SPL от расстояния</button>
+                    <button class="sound-mode-btn" data-mode="power">⚡ Изменение SPL от мощности</button>
                 </div>
             </div>
         </div>
 
-        <!-- Эргономика ЭКП (переключатель) -->
+        <!-- Эргономика ЭКП -->
         <div class="sidebar-section" id="ergoSection">
-            <div class="section-header" data-section="ergo"><span><i class="fas fa-chalkboard-user"></i> Эргономика ЭКП</span><i class="fas fa-angle-down"></i></div>
+            <div class="section-header" data-section="ergo">
+                <i class="fas fa-chalkboard-user"></i>
+                <span>Эргономика ЭКП</span>
+                <i class="fas fa-angle-down"></i>
+            </div>
             <div class="section-content" id="ergoContent">
                 <button class="btn-primary" id="showErgoCalcBtn"><i class="fas fa-calculator"></i> Показать калькулятор</button>
             </div>
         </div>
 
-        <!-- TRACTS аккордеон (с кнопкой "все тракты") -->
+        <!-- TRACTS аккордеон -->
         <div class="sidebar-section" id="pathsSection">
-            <div class="section-header" data-section="paths"><span><i class="fas fa-road"></i> TRACTS</span><i class="fas fa-angle-down"></i></div>
+            <div class="section-header" data-section="paths">
+                <i class="fas fa-road"></i>
+                <span>TRACTS</span>
+                <i class="fas fa-angle-down"></i>
+            </div>
             <div class="section-content" id="pathsContent">
                 <ul class="paths-list" id="sidebarPathsList"></ul>
                 <div class="tracts-actions">
@@ -689,7 +802,11 @@
 
         <!-- СТАТИСТИКА: сеть -->
         <div class="sidebar-section" id="networkStatsSection">
-            <div class="section-header" data-section="networkStats"><span><i class="fas fa-chart-line"></i> СЕТЬ</span><i class="fas fa-angle-down"></i></div>
+            <div class="section-header" data-section="networkStats">
+                <i class="fas fa-chart-line"></i>
+                <span>СЕТЬ</span>
+                <i class="fas fa-angle-down"></i>
+            </div>
             <div class="section-content" id="networkStatsContent">
                 <div class="widget"><div class="widget-item"><span class="widget-label"><i class="fas fa-chart-line"></i><span> Битрейт:</span></span><span class="widget-value" id="sidebarTotalBitrate">0</span> Мбит/с</div>
                 <div class="widget-item"><span class="widget-label"><i class="fas fa-tachometer-alt"></i><span> Загрузка:</span></span><span class="widget-value" id="sidebarLoadPercent">0%</span></div>
@@ -698,7 +815,11 @@
         </div>
         <!-- СТАТИСТИКА: питание -->
         <div class="sidebar-section" id="powerStatsSection">
-            <div class="section-header" data-section="powerStats"><span><i class="fas fa-bolt"></i> ПИТАНИЕ</span><i class="fas fa-angle-down"></i></div>
+            <div class="section-header" data-section="powerStats">
+                <i class="fas fa-bolt"></i>
+                <span>ПИТАНИЕ</span>
+                <i class="fas fa-angle-down"></i>
+            </div>
             <div class="section-content" id="powerStatsContent">
                 <div class="widget"><div class="widget-item"><span class="widget-label"><i class="fas fa-bolt"></i><span> PoE:</span></span><span class="widget-value" id="sidebarPoEUsed">0</span>/<span id="sidebarPoETotal">0</span> Вт</div>
                 <div class="widget-item"><span class="widget-label"><i class="fas fa-fire"></i><span> Мощность:</span></span><span class="widget-value" id="sidebarTotalPower">0</span> Вт</div>
@@ -706,9 +827,13 @@
             </div>
         </div>
 
-        <!-- УПРАВЛЕНИЕ (с новыми кнопками) -->
+        <!-- УПРАВЛЕНИЕ -->
         <div class="sidebar-section" id="manageSection">
-            <div class="section-header" data-section="manage"><span><i class="fas fa-cog"></i> УПРАВЛЕНИЕ</span><i class="fas fa-angle-down"></i></div>
+            <div class="section-header" data-section="manage">
+                <i class="fas fa-cog"></i>
+                <span>УПРАВЛЕНИЕ</span>
+                <i class="fas fa-angle-down"></i>
+            </div>
             <div class="section-content" id="manageContent">
                 <div class="manage-buttons">
                     <button class="btn-secondary" id="saveToBrowserBtn"><i class="fas fa-database"></i><span> Сохранить в браузере</span></button>
@@ -729,6 +854,8 @@
         <div id="activePathContainer" class="active-path-container"></div>
         <div id="allTractsContainer" style="display: none;"></div>
         <div id="ergoCalculatorContainer" style="display: none;"></div>
+        <div id="soundCalculatorContainer" style="display: none;"></div>
+        <div id="ledCalculatorContainer" style="display: none;"></div>
     </div>
 </div>
 <button class="mobile-menu-toggle" id="mobileMenuToggle"><i class="fas fa-bars"></i></button>
@@ -869,10 +996,35 @@
     let nextPathId = 1;
     let nextSwitchId = 1;
     let activePathId = null;
-    let viewMode = 'single'; // 'single', 'all', 'ergo'
+    let viewMode = 'single'; // 'single', 'all', 'ergo', 'sound', 'led'
 
-    let ledConfig = { modelIndex: 0, widthCabinets: 1, heightCabinets: 1, widthMeters: 0, heightMeters: 0, area: 0, resolution: { w:0, h:0 }, power: 0 };
-    let soundConfig = { micChannels: 0, dspType: 'builtin', ampPower: 0, dspLatency: 0 };
+    // LED конфигурация (для сохранения и сшивки)
+    let ledConfig = {
+        activeMode: 'cabinets', // 'cabinets', 'resolution', 'stitching'
+        // параметры для режима "По кабинетам"
+        pitchIndex: 0,          // индекс в modelDB.ledScreen
+        cabinetPreset: '600x337.5', // или '500x500', '640x480', '960x540', 'custom'
+        cabinetWidth: 600,      // мм
+        cabinetHeight: 337.5,   // мм
+        cabinetsW: 1,
+        cabinetsH: 1,
+        // параметры для режима "По разрешению"
+        targetResolution: 'fhd', // 'fhd', '4k', '8k', 'custom'
+        customResW: 1920,
+        customResH: 1080,
+        // параметры для режима "Сшивка экранов"
+        stitchedScreenId: null,   // id устройства LED-экрана в проекте
+        stitchCountW: 2,
+        stitchCountH: 1,
+        // общие вычисляемые поля (для отображения)
+        width_m: 0,
+        height_m: 0,
+        resW: 0,
+        resH: 0,
+        area: 0,
+        power: 0
+    };
+
     let exportCounter = 1;
 
     const sidebarPathsList = document.getElementById('sidebarPathsList');
@@ -887,6 +1039,8 @@
     const activePathContainer = document.getElementById('activePathContainer');
     const allTractsContainer = document.getElementById('allTractsContainer');
     const ergoCalculatorContainer = document.getElementById('ergoCalculatorContainer');
+    const soundCalculatorContainer = document.getElementById('soundCalculatorContainer');
+    const ledCalculatorContainer = document.getElementById('ledCalculatorContainer');
 
     const modal = document.getElementById('addDeviceModal');
     const deviceTypeSelect = document.getElementById('deviceTypeSelect');
@@ -1352,6 +1506,8 @@
         activePathContainer.style.display = '';
         allTractsContainer.style.display = 'none';
         ergoCalculatorContainer.style.display = 'none';
+        soundCalculatorContainer.style.display = 'none';
+        ledCalculatorContainer.style.display = 'none';
         const ergoBtn = document.getElementById('showErgoCalcBtn');
         ergoBtn.classList.remove('btn-inactive');
         ergoBtn.classList.add('btn-primary');
@@ -1364,6 +1520,8 @@
         activePathContainer.style.display = 'none';
         allTractsContainer.style.display = '';
         ergoCalculatorContainer.style.display = 'none';
+        soundCalculatorContainer.style.display = 'none';
+        ledCalculatorContainer.style.display = 'none';
         const ergoBtn = document.getElementById('showErgoCalcBtn');
         ergoBtn.classList.remove('btn-inactive');
         ergoBtn.classList.add('btn-primary');
@@ -1389,6 +1547,8 @@
         viewMode = 'ergo';
         activePathContainer.style.display = 'none';
         allTractsContainer.style.display = 'none';
+        soundCalculatorContainer.style.display = 'none';
+        ledCalculatorContainer.style.display = 'none';
         ergoCalculatorContainer.style.display = '';
         const ergoBtn = document.getElementById('showErgoCalcBtn');
         ergoBtn.classList.remove('btn-primary');
@@ -1404,10 +1564,10 @@
                         if (dev.type === 'display') {
                             w = 1200; h = 700; rw = 1920; rh = 1080;
                         } else if (dev.type === 'ledScreen') {
-                            w = ledConfig.widthMeters > 0 ? ledConfig.widthMeters * 1000 : ledConfig.widthCabinets * 600;
-                            h = ledConfig.heightMeters > 0 ? ledConfig.heightMeters * 1000 : ledConfig.heightCabinets * 337.5;
-                            rw = ledConfig.resolution.w;
-                            rh = ledConfig.resolution.h;
+                            w = ledConfig.width_m * 1000;
+                            h = ledConfig.height_m * 1000;
+                            rw = ledConfig.resW;
+                            rh = ledConfig.resH;
                         }
                         screensList.push({
                             id: dev.id,
@@ -1805,6 +1965,570 @@
         }
     }
 
+    // ========== ЗВУКОВЫЕ КАЛЬКУЛЯТОРЫ ==========
+    function renderSoundCalculator(mode) {
+        soundConfig.activeMode = mode;
+        let html = '';
+        if (mode === 'spl') {
+            html = `
+                <div class="calc-card">
+                    <h3>🔊 Расчёт уровня звукового давления (SPL) на расстоянии</h3>
+                    <div class="setting">
+                        <label>Чувствительность (дБ/1Вт/1м):</label>
+                        <input type="number" id="splSensitivity" value="${soundConfig.sensitivity}" step="1">
+                    </div>
+                    <div class="setting">
+                        <label>Мощность источника (Вт):</label>
+                        <input type="number" id="splPower" value="${soundConfig.sourcePower}" step="0.5" min="0.1">
+                    </div>
+                    <div class="setting">
+                        <label>Расстояние до источника (м):</label>
+                        <input type="number" id="splDistance" value="${soundConfig.distance}" step="0.5" min="0.1">
+                    </div>
+                    <div class="setting">
+                        <label>Запас headroom (дБ):</label>
+                        <input type="number" id="splHeadroom" value="${soundConfig.headroom}" step="1">
+                    </div>
+                    <div class="setting">
+                        <label>Помещение (дБ):</label>
+                        <input type="number" id="splRoom" value="${soundConfig.roomGain}" step="1">
+                    </div>
+                    <div class="widget-item">
+                        <span class="widget-label"><i class="fas fa-volume-up"></i> SPL на расстоянии:</span>
+                        <span class="widget-value" id="splResultValue">—</span> дБ
+                    </div>
+                    <div class="ergo-info" style="margin-top: 12px;">
+                        Формула: SPL = чувствительность + 10·lg(мощность) – 20·lg(расстояние) + headroom + помещение.
+                    </div>
+                </div>
+            `;
+        } else if (mode === 'drop') {
+            html = `
+                <div class="calc-card">
+                    <h3>📉 Падение звукового давления от расстояния</h3>
+                    <div class="setting">
+                        <label>Тип источника:</label>
+                        <select id="dropSourceType">
+                            <option value="point" ${soundConfig.sourceType === 'point' ? 'selected' : ''}>Точечный</option>
+                            <option value="line" ${soundConfig.sourceType === 'line' ? 'selected' : ''}>Линейный массив</option>
+                        </select>
+                    </div>
+                    <div class="setting">
+                        <label>Начальное расстояние (м):</label>
+                        <input type="number" id="dropStart" value="${soundConfig.startDistance}" step="0.5" min="0.1">
+                    </div>
+                    <div class="setting">
+                        <label>Конечное расстояние (м):</label>
+                        <input type="number" id="dropEnd" value="${soundConfig.endDistance}" step="0.5" min="0.1">
+                    </div>
+                    <div class="widget-item">
+                        <span class="widget-label"><i class="fas fa-chart-line"></i> Падение SPL:</span>
+                        <span class="widget-value" id="dropResultValue">—</span> дБ
+                    </div>
+                    <div class="ergo-info" style="margin-top: 12px;">
+                        Для точечного: Δ = 20·lg(R2/R1); для линейного: Δ = 10·lg(R2/R1).<br>
+                        Удвоение расстояния: точечный –6 дБ, линейный –3 дБ.
+                    </div>
+                </div>
+            `;
+        } else if (mode === 'power') {
+            html = `
+                <div class="calc-card">
+                    <h3>⚡ Изменение уровня звукового давления при изменении мощности</h3>
+                    <div class="setting">
+                        <label>Мощность 1 (Вт):</label>
+                        <input type="number" id="powerFromVal" value="${soundConfig.powerChangeFrom}" step="0.5" min="0.1">
+                    </div>
+                    <div class="setting">
+                        <label>Мощность 2 (Вт):</label>
+                        <input type="number" id="powerToVal" value="${soundConfig.powerChangeTo}" step="0.5" min="0.1">
+                    </div>
+                    <div class="widget-item">
+                        <span class="widget-label"><i class="fas fa-chart-line"></i> Изменение SPL:</span>
+                        <span class="widget-value" id="powerChangeResultValue">—</span> дБ
+                    </div>
+                    <div class="ergo-info" style="margin-top: 12px;">
+                        Формула: Δ = 10·lg(P2/P1).<br>
+                        Удвоение мощности → +3 дБ, увеличение в 10 раз → +10 дБ.
+                    </div>
+                </div>
+            `;
+        }
+        soundCalculatorContainer.innerHTML = html;
+
+        // Навесить обработчики и выполнить расчёт
+        const update = () => {
+            if (mode === 'spl') {
+                const sens = parseFloat(document.getElementById('splSensitivity').value) || 0;
+                const power = parseFloat(document.getElementById('splPower').value) || 0;
+                const dist = parseFloat(document.getElementById('splDistance').value) || 0;
+                const head = parseFloat(document.getElementById('splHeadroom').value) || 0;
+                const room = parseFloat(document.getElementById('splRoom').value) || 0;
+                let spl = sens + 10 * Math.log10(power) - 20 * Math.log10(dist) + head + room;
+                document.getElementById('splResultValue').innerText = spl.toFixed(1);
+                // Сохранить
+                soundConfig.sensitivity = sens;
+                soundConfig.sourcePower = power;
+                soundConfig.distance = dist;
+                soundConfig.headroom = head;
+                soundConfig.roomGain = room;
+            } else if (mode === 'drop') {
+                const type = document.getElementById('dropSourceType').value;
+                const start = parseFloat(document.getElementById('dropStart').value) || 0;
+                const end = parseFloat(document.getElementById('dropEnd').value) || 0;
+                let drop = 0;
+                if (type === 'point') {
+                    drop = 20 * Math.log10(end / start);
+                } else {
+                    drop = 10 * Math.log10(end / start);
+                }
+                document.getElementById('dropResultValue').innerText = drop.toFixed(1);
+                soundConfig.sourceType = type;
+                soundConfig.startDistance = start;
+                soundConfig.endDistance = end;
+            } else if (mode === 'power') {
+                const p1 = parseFloat(document.getElementById('powerFromVal').value) || 0;
+                const p2 = parseFloat(document.getElementById('powerToVal').value) || 0;
+                let change = 10 * Math.log10(p2 / p1);
+                document.getElementById('powerChangeResultValue').innerText = change.toFixed(1);
+                soundConfig.powerChangeFrom = p1;
+                soundConfig.powerChangeTo = p2;
+            }
+        };
+
+        // Назначаем обработчики на все поля
+        const inputs = soundCalculatorContainer.querySelectorAll('input, select');
+        inputs.forEach(inp => {
+            inp.addEventListener('input', update);
+            inp.addEventListener('change', update);
+        });
+        update();
+    }
+
+    function showSoundMode(mode) {
+        viewMode = 'sound';
+        activePathContainer.style.display = 'none';
+        allTractsContainer.style.display = 'none';
+        ergoCalculatorContainer.style.display = 'none';
+        ledCalculatorContainer.style.display = 'none';
+        soundCalculatorContainer.style.display = '';
+        renderSoundCalculator(mode);
+        // Подсветка активной кнопки в аккордеоне
+        document.querySelectorAll('.sound-mode-btn').forEach(btn => {
+            if (btn.dataset.mode === mode) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+        const ergoBtn = document.getElementById('showErgoCalcBtn');
+        ergoBtn.classList.remove('btn-inactive');
+        ergoBtn.classList.add('btn-primary');
+        ergoBtn.innerHTML = '<i class="fas fa-calculator"></i> Показать калькулятор';
+    }
+
+    // ========== LED КАЛЬКУЛЯТОРЫ ==========
+    function renderLedCalculator(mode) {
+        ledConfig.activeMode = mode;
+        let html = '';
+        if (mode === 'cabinets') {
+            // предустановки размеров кабинета
+            const cabinetPresets = {
+                '600x337.5': { w:600, h:337.5 },
+                '500x500': { w:500, h:500 },
+                '640x480': { w:640, h:480 },
+                '960x540': { w:960, h:540 },
+                'custom': { w:ledConfig.cabinetWidth, h:ledConfig.cabinetHeight }
+            };
+            html = `
+                <div class="calc-card">
+                    <h3>📐 Расчёт LED-экрана по кабинетам</h3>
+                    <div class="setting">
+                        <label>Шаг пикселя:</label>
+                        <select id="cabPitchSelect">
+                            ${modelDB.ledScreen.map((m,i) => `<option value="${i}" ${ledConfig.pitchIndex == i ? 'selected' : ''}>${m.name}</option>`).join('')}
+                        </select>
+                    </div>
+                    <div class="setting">
+                        <label>Размер кабинета:</label>
+                        <select id="cabinetPresetSelect">
+                            <option value="600x337.5" ${ledConfig.cabinetPreset === '600x337.5' ? 'selected' : ''}>600×337.5 мм</option>
+                            <option value="500x500" ${ledConfig.cabinetPreset === '500x500' ? 'selected' : ''}>500×500 мм</option>
+                            <option value="640x480" ${ledConfig.cabinetPreset === '640x480' ? 'selected' : ''}>640×480 мм</option>
+                            <option value="960x540" ${ledConfig.cabinetPreset === '960x540' ? 'selected' : ''}>960×540 мм</option>
+                            <option value="custom" ${ledConfig.cabinetPreset === 'custom' ? 'selected' : ''}>Свой</option>
+                        </select>
+                    </div>
+                    <div id="customCabinetSize" style="display: ${ledConfig.cabinetPreset === 'custom' ? 'block' : 'none'};">
+                        <div class="setting">
+                            <label>Ширина кабинета (мм):</label>
+                            <input type="number" id="cabWidthCustom" value="${ledConfig.cabinetWidth}" step="1">
+                        </div>
+                        <div class="setting">
+                            <label>Высота кабинета (мм):</label>
+                            <input type="number" id="cabHeightCustom" value="${ledConfig.cabinetHeight}" step="1">
+                        </div>
+                    </div>
+                    <div class="setting">
+                        <label>Кол-во кабинетов по горизонтали:</label>
+                        <input type="number" id="cabinetsW" value="${ledConfig.cabinetsW}" min="1" step="1">
+                    </div>
+                    <div class="setting">
+                        <label>Кол-во кабинетов по вертикали:</label>
+                        <input type="number" id="cabinetsH" value="${ledConfig.cabinetsH}" min="1" step="1">
+                    </div>
+                    <div class="result-grid">
+                        <div class="result-item"><div class="result-label">Ширина экрана</div><div class="result-value" id="cabWidthResult">—</div><div>м</div></div>
+                        <div class="result-item"><div class="result-label">Высота экрана</div><div class="result-value" id="cabHeightResult">—</div><div>м</div></div>
+                        <div class="result-item"><div class="result-label">Разрешение</div><div class="result-value" id="cabResResult">—</div><div>пикс</div></div>
+                        <div class="result-item"><div class="result-label">Площадь</div><div class="result-value" id="cabAreaResult">—</div><div>м²</div></div>
+                        <div class="result-item"><div class="result-label">Потребляемая мощность</div><div class="result-value" id="cabPowerResult">—</div><div>Вт</div></div>
+                    </div>
+                    <div class="ergo-info" style="margin-top: 12px;">
+                        Разрешение = (ширина кабинета / шаг) × кол-во кабинетов. Мощность = площадь × удельная мощность (Вт/м²).
+                    </div>
+                </div>
+            `;
+        } else if (mode === 'resolution') {
+            html = `
+                <div class="calc-card">
+                    <h3>🎯 Расчёт LED-экрана по разрешению</h3>
+                    <div class="setting">
+                        <label>Шаг пикселя:</label>
+                        <select id="resPitchSelect">
+                            ${modelDB.ledScreen.map((m,i) => `<option value="${i}" ${ledConfig.pitchIndex == i ? 'selected' : ''}>${m.name}</option>`).join('')}
+                        </select>
+                    </div>
+                    <div class="setting">
+                        <label>Размер кабинета:</label>
+                        <select id="resCabinetPresetSelect">
+                            <option value="600x337.5" ${ledConfig.cabinetPreset === '600x337.5' ? 'selected' : ''}>600×337.5 мм</option>
+                            <option value="500x500" ${ledConfig.cabinetPreset === '500x500' ? 'selected' : ''}>500×500 мм</option>
+                            <option value="640x480" ${ledConfig.cabinetPreset === '640x480' ? 'selected' : ''}>640×480 мм</option>
+                            <option value="960x540" ${ledConfig.cabinetPreset === '960x540' ? 'selected' : ''}>960×540 мм</option>
+                            <option value="custom" ${ledConfig.cabinetPreset === 'custom' ? 'selected' : ''}>Свой</option>
+                        </select>
+                    </div>
+                    <div id="resCustomCabinetSize" style="display: ${ledConfig.cabinetPreset === 'custom' ? 'block' : 'none'};">
+                        <div class="setting">
+                            <label>Ширина кабинета (мм):</label>
+                            <input type="number" id="resCabWidthCustom" value="${ledConfig.cabinetWidth}" step="1">
+                        </div>
+                        <div class="setting">
+                            <label>Высота кабинета (мм):</label>
+                            <input type="number" id="resCabHeightCustom" value="${ledConfig.cabinetHeight}" step="1">
+                        </div>
+                    </div>
+                    <div class="setting">
+                        <label>Желаемое разрешение:</label>
+                        <select id="targetResolutionSelect">
+                            <option value="fhd" ${ledConfig.targetResolution === 'fhd' ? 'selected' : ''}>Full HD (1920×1080)</option>
+                            <option value="4k" ${ledConfig.targetResolution === '4k' ? 'selected' : ''}>4K (3840×2160)</option>
+                            <option value="8k" ${ledConfig.targetResolution === '8k' ? 'selected' : ''}>8K (7680×4320)</option>
+                            <option value="custom" ${ledConfig.targetResolution === 'custom' ? 'selected' : ''}>Своё</option>
+                        </select>
+                    </div>
+                    <div id="customResolution" style="display: ${ledConfig.targetResolution === 'custom' ? 'block' : 'none'};">
+                        <div class="setting">
+                            <label>Ширина (пикс):</label>
+                            <input type="number" id="customResW" value="${ledConfig.customResW}" step="1" min="1">
+                        </div>
+                        <div class="setting">
+                            <label>Высота (пикс):</label>
+                            <input type="number" id="customResH" value="${ledConfig.customResH}" step="1" min="1">
+                        </div>
+                    </div>
+                    <div class="result-grid">
+                        <div class="result-item"><div class="result-label">Требуемое разрешение</div><div class="result-value" id="reqRes">—</div><div>пикс</div></div>
+                        <div class="result-item"><div class="result-label">Реальное разрешение</div><div class="result-value" id="realRes">—</div><div>пикс</div></div>
+                        <div class="result-item"><div class="result-label">Размер экрана</div><div class="result-value" id="resSize">—</div><div>м</div></div>
+                        <div class="result-item"><div class="result-label">Кол-во кабинетов</div><div class="result-value" id="resCabinetsCount">—</div><div></div></div>
+                        <div class="result-item"><div class="result-label">Площадь</div><div class="result-value" id="resArea">—</div><div>м²</div></div>
+                        <div class="result-item"><div class="result-label">Мощность</div><div class="result-value" id="resPower">—</div><div>Вт</div></div>
+                    </div>
+                    <div class="ergo-info" style="margin-top: 12px;">
+                        Система подбирает ближайшее количество кабинетов, покрывающее заданное разрешение (округляя вверх).
+                    </div>
+                </div>
+            `;
+        } else if (mode === 'stitching') {
+            // Собираем список LED-экранов из проекта (устройства типа ledScreen)
+            const ledScreens = [];
+            paths.forEach(path => {
+                [...path.sourceDevices, ...path.sinkDevices].forEach(dev => {
+                    if (dev.type === 'ledScreen') {
+                        ledScreens.push(dev);
+                    }
+                });
+            });
+            const screenOptions = ledScreens.map(s => `<option value="${s.id}" data-width="${s.width_m || 0}" data-height="${s.height_m || 0}" data-resw="${s.resW || 0}" data-resh="${s.resH || 0}">${s.name}</option>`).join('');
+            html = `
+                <div class="calc-card">
+                    <h3>🖥 Сшивка LED-экранов</h3>
+                    <div class="setting">
+                        <label>Базовый экран:</label>
+                        <select id="stitchScreenSelect">
+                            <option value="">— Выберите экран —</option>
+                            ${screenOptions}
+                        </select>
+                    </div>
+                    <div class="setting">
+                        <label>Кол-во по горизонтали:</label>
+                        <input type="number" id="stitchCountW" value="${ledConfig.stitchCountW}" min="1" step="1">
+                    </div>
+                    <div class="setting">
+                        <label>Кол-во по вертикали:</label>
+                        <input type="number" id="stitchCountH" value="${ledConfig.stitchCountH}" min="1" step="1">
+                    </div>
+                    <div class="result-grid">
+                        <div class="result-item"><div class="result-label">Итоговое разрешение</div><div class="result-value" id="stitchRes">—</div><div>пикс</div></div>
+                        <div class="result-item"><div class="result-label">Итоговый размер</div><div class="result-value" id="stitchSize">—</div><div>м</div></div>
+                        <div class="result-item"><div class="result-label">Площадь</div><div class="result-value" id="stitchArea">—</div><div>м²</div></div>
+                        <div class="result-item"><div class="result-label">Мощность</div><div class="result-value" id="stitchPower">—</div><div>Вт</div></div>
+                    </div>
+                    <div class="ergo-info" style="margin-top: 12px;">
+                        Сшивка нескольких одинаковых LED-экранов в один логический экран. Для расчёта нужен экран, ранее созданный в тракте (тип LED-экран).
+                    </div>
+                </div>
+            `;
+        }
+        ledCalculatorContainer.innerHTML = html;
+
+        // Функции обновления для каждого режима
+        const updateCabinets = () => {
+            const pitchIdx = parseInt(document.getElementById('cabPitchSelect').value);
+            const pitch = modelDB.ledScreen[pitchIdx].pitch;
+            const powerPerSqm = modelDB.ledScreen[pitchIdx].powerPerSqm;
+            const preset = document.getElementById('cabinetPresetSelect').value;
+            let cabW = 600, cabH = 337.5;
+            if (preset === 'custom') {
+                cabW = parseFloat(document.getElementById('cabWidthCustom').value) || 600;
+                cabH = parseFloat(document.getElementById('cabHeightCustom').value) || 337.5;
+                ledConfig.cabinetPreset = 'custom';
+                ledConfig.cabinetWidth = cabW;
+                ledConfig.cabinetHeight = cabH;
+            } else {
+                const [w, h] = preset.split('x').map(Number);
+                cabW = w; cabH = h;
+                ledConfig.cabinetPreset = preset;
+                ledConfig.cabinetWidth = cabW;
+                ledConfig.cabinetHeight = cabH;
+            }
+            const cW = parseInt(document.getElementById('cabinetsW').value) || 1;
+            const cH = parseInt(document.getElementById('cabinetsH').value) || 1;
+            ledConfig.cabinetsW = cW;
+            ledConfig.cabinetsH = cH;
+            ledConfig.pitchIndex = pitchIdx;
+
+            const width_m = (cW * cabW) / 1000;
+            const height_m = (cH * cabH) / 1000;
+            const resW = Math.round((cabW / pitch) * cW);
+            const resH = Math.round((cabH / pitch) * cH);
+            const area = width_m * height_m;
+            const power = area * powerPerSqm;
+
+            document.getElementById('cabWidthResult').innerText = width_m.toFixed(2);
+            document.getElementById('cabHeightResult').innerText = height_m.toFixed(2);
+            document.getElementById('cabResResult').innerText = `${resW}×${resH}`;
+            document.getElementById('cabAreaResult').innerText = area.toFixed(2);
+            document.getElementById('cabPowerResult').innerText = Math.round(power);
+
+            ledConfig.width_m = width_m;
+            ledConfig.height_m = height_m;
+            ledConfig.resW = resW;
+            ledConfig.resH = resH;
+            ledConfig.area = area;
+            ledConfig.power = power;
+            calculateAll(); // обновляем общую статистику питания
+        };
+
+        const updateResolution = () => {
+            const pitchIdx = parseInt(document.getElementById('resPitchSelect').value);
+            const pitch = modelDB.ledScreen[pitchIdx].pitch;
+            const powerPerSqm = modelDB.ledScreen[pitchIdx].powerPerSqm;
+            const preset = document.getElementById('resCabinetPresetSelect').value;
+            let cabW = 600, cabH = 337.5;
+            if (preset === 'custom') {
+                cabW = parseFloat(document.getElementById('resCabWidthCustom').value) || 600;
+                cabH = parseFloat(document.getElementById('resCabHeightCustom').value) || 337.5;
+                ledConfig.cabinetPreset = 'custom';
+                ledConfig.cabinetWidth = cabW;
+                ledConfig.cabinetHeight = cabH;
+            } else {
+                const [w, h] = preset.split('x').map(Number);
+                cabW = w; cabH = h;
+                ledConfig.cabinetPreset = preset;
+                ledConfig.cabinetWidth = cabW;
+                ledConfig.cabinetHeight = cabH;
+            }
+            ledConfig.pitchIndex = pitchIdx;
+
+            const targetResSelect = document.getElementById('targetResolutionSelect').value;
+            let targetW = 1920, targetH = 1080;
+            if (targetResSelect === 'fhd') { targetW=1920; targetH=1080; ledConfig.targetResolution='fhd'; }
+            else if (targetResSelect === '4k') { targetW=3840; targetH=2160; ledConfig.targetResolution='4k'; }
+            else if (targetResSelect === '8k') { targetW=7680; targetH=4320; ledConfig.targetResolution='8k'; }
+            else {
+                targetW = parseInt(document.getElementById('customResW').value) || 1920;
+                targetH = parseInt(document.getElementById('customResH').value) || 1080;
+                ledConfig.targetResolution = 'custom';
+                ledConfig.customResW = targetW;
+                ledConfig.customResH = targetH;
+            }
+
+            // разрешение одного кабинета
+            const pixPerCabW = cabW / pitch;
+            const pixPerCabH = cabH / pitch;
+            // количество кабинетов, необходимое для покрытия разрешения (округляем вверх)
+            let cW = Math.ceil(targetW / pixPerCabW);
+            let cH = Math.ceil(targetH / pixPerCabH);
+            if (cW < 1) cW = 1;
+            if (cH < 1) cH = 1;
+            const realResW = Math.round(pixPerCabW * cW);
+            const realResH = Math.round(pixPerCabH * cH);
+            const width_m = (cW * cabW) / 1000;
+            const height_m = (cH * cabH) / 1000;
+            const area = width_m * height_m;
+            const power = area * powerPerSqm;
+
+            document.getElementById('reqRes').innerHTML = `${targetW}×${targetH}`;
+            document.getElementById('realRes').innerHTML = `${realResW}×${realResH}`;
+            document.getElementById('resSize').innerHTML = `${width_m.toFixed(2)}×${height_m.toFixed(2)}`;
+            document.getElementById('resCabinetsCount').innerHTML = `${cW}×${cH}`;
+            document.getElementById('resArea').innerHTML = area.toFixed(2);
+            document.getElementById('resPower').innerHTML = Math.round(power);
+
+            ledConfig.width_m = width_m;
+            ledConfig.height_m = height_m;
+            ledConfig.resW = realResW;
+            ledConfig.resH = realResH;
+            ledConfig.area = area;
+            ledConfig.power = power;
+            calculateAll();
+        };
+
+        const updateStitching = () => {
+            const select = document.getElementById('stitchScreenSelect');
+            const selectedId = select.value;
+            if (!selectedId) return;
+            // ищем устройство в трактах
+            let found = null;
+            for (let path of paths) {
+                found = [...path.sourceDevices, ...path.sinkDevices].find(d => d.id == selectedId && d.type === 'ledScreen');
+                if (found) break;
+            }
+            if (!found) return;
+            const countW = parseInt(document.getElementById('stitchCountW').value) || 1;
+            const countH = parseInt(document.getElementById('stitchCountH').value) || 1;
+            ledConfig.stitchedScreenId = selectedId;
+            ledConfig.stitchCountW = countW;
+            ledConfig.stitchCountH = countH;
+            const baseW_m = found.width_m || 0;
+            const baseH_m = found.height_m || 0;
+            const baseResW = found.resW || 0;
+            const baseResH = found.resH || 0;
+            const totalW_m = baseW_m * countW;
+            const totalH_m = baseH_m * countH;
+            const totalResW = baseResW * countW;
+            const totalResH = baseResH * countH;
+            const area = totalW_m * totalH_m;
+            const power = area * (found.powerPerSqm || 300); // примерная мощность, если нет
+            document.getElementById('stitchRes').innerHTML = `${totalResW}×${totalResH}`;
+            document.getElementById('stitchSize').innerHTML = `${totalW_m.toFixed(2)}×${totalH_m.toFixed(2)}`;
+            document.getElementById('stitchArea').innerHTML = area.toFixed(2);
+            document.getElementById('stitchPower').innerHTML = Math.round(power);
+            // сохраняем в ledConfig для общей статистики
+            ledConfig.width_m = totalW_m;
+            ledConfig.height_m = totalH_m;
+            ledConfig.resW = totalResW;
+            ledConfig.resH = totalResH;
+            ledConfig.area = area;
+            ledConfig.power = power;
+            calculateAll();
+        };
+
+        // Назначить обработчики в зависимости от режима
+        if (mode === 'cabinets') {
+            const pitchSel = document.getElementById('cabPitchSelect');
+            const presetSel = document.getElementById('cabinetPresetSelect');
+            const customDiv = document.getElementById('customCabinetSize');
+            const cabWInput = document.getElementById('cabWidthCustom');
+            const cabHInput = document.getElementById('cabHeightCustom');
+            const cWInput = document.getElementById('cabinetsW');
+            const cHInput = document.getElementById('cabinetsH');
+
+            const updatePresetVisibility = () => {
+                customDiv.style.display = presetSel.value === 'custom' ? 'block' : 'none';
+                updateCabinets();
+            };
+            presetSel.addEventListener('change', updatePresetVisibility);
+            pitchSel.addEventListener('change', updateCabinets);
+            cabWInput.addEventListener('input', updateCabinets);
+            cabHInput.addEventListener('input', updateCabinets);
+            cWInput.addEventListener('input', updateCabinets);
+            cHInput.addEventListener('input', updateCabinets);
+            updatePresetVisibility();
+        } else if (mode === 'resolution') {
+            const pitchSel = document.getElementById('resPitchSelect');
+            const presetSel = document.getElementById('resCabinetPresetSelect');
+            const customDiv = document.getElementById('resCustomCabinetSize');
+            const cabWInput = document.getElementById('resCabWidthCustom');
+            const cabHInput = document.getElementById('resCabHeightCustom');
+            const targetResSel = document.getElementById('targetResolutionSelect');
+            const customResDiv = document.getElementById('customResolution');
+            const customResW = document.getElementById('customResW');
+            const customResH = document.getElementById('customResH');
+
+            const updatePresetVisibility = () => {
+                customDiv.style.display = presetSel.value === 'custom' ? 'block' : 'none';
+                updateResolution();
+            };
+            const updateTargetVisibility = () => {
+                customResDiv.style.display = targetResSel.value === 'custom' ? 'block' : 'none';
+                updateResolution();
+            };
+            presetSel.addEventListener('change', updatePresetVisibility);
+            pitchSel.addEventListener('change', updateResolution);
+            cabWInput.addEventListener('input', updateResolution);
+            cabHInput.addEventListener('input', updateResolution);
+            targetResSel.addEventListener('change', updateTargetVisibility);
+            customResW.addEventListener('input', updateResolution);
+            customResH.addEventListener('input', updateResolution);
+            updatePresetVisibility();
+            updateTargetVisibility();
+        } else if (mode === 'stitching') {
+            const screenSelect = document.getElementById('stitchScreenSelect');
+            const countW = document.getElementById('stitchCountW');
+            const countH = document.getElementById('stitchCountH');
+            screenSelect.addEventListener('change', updateStitching);
+            countW.addEventListener('input', updateStitching);
+            countH.addEventListener('input', updateStitching);
+            if (screenSelect.value) updateStitching();
+        }
+    }
+
+    function showLedMode(mode) {
+        viewMode = 'led';
+        activePathContainer.style.display = 'none';
+        allTractsContainer.style.display = 'none';
+        ergoCalculatorContainer.style.display = 'none';
+        soundCalculatorContainer.style.display = 'none';
+        ledCalculatorContainer.style.display = '';
+        renderLedCalculator(mode);
+        // Подсветка активной кнопки в аккордеоне
+        document.querySelectorAll('.led-mode-btn').forEach(btn => {
+            if (btn.dataset.mode === mode) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+        const ergoBtn = document.getElementById('showErgoCalcBtn');
+        ergoBtn.classList.remove('btn-inactive');
+        ergoBtn.classList.add('btn-primary');
+        ergoBtn.innerHTML = '<i class="fas fa-calculator"></i> Показать калькулятор';
+    }
+
     function calculateAll(){
         let totalBitrate=0, allSwitches=[], totalPoEBudget=0, usedPoE=0, mainsPower=0, totalPowerAll=0, warnings=[];
         const codecFactor=getResolutionFactor()*getChromaFactor()*getColorSpaceFactor()*getBitDepthFactor();
@@ -1867,12 +2591,11 @@
             });
         });
 
+        // LED экран (из ledConfig)
         if(ledConfig.area>0 && ledConfig.power>0){
             totalPowerAll+=ledConfig.power;
             mainsPower+=ledConfig.power;
         }
-        totalPowerAll+=soundConfig.ampPower;
-        mainsPower+=soundConfig.ampPower;
 
         for(let sw of projectSwitches){
             if(sw.type==='matrix'){
@@ -1904,6 +2627,14 @@
             else renderEmptyState();
         } else if (viewMode === 'all') {
             renderAllTracts();
+        } else if (viewMode === 'sound') {
+            if (soundCalculatorContainer.style.display !== 'none') {
+                renderSoundCalculator(soundConfig.activeMode);
+            }
+        } else if (viewMode === 'led') {
+            if (ledCalculatorContainer.style.display !== 'none') {
+                renderLedCalculator(ledConfig.activeMode);
+            }
         }
         renderPathsList();
     }
@@ -2057,73 +2788,6 @@
         });
     }
 
-    function initLED(){
-        const select=document.getElementById('ledModelSelect');
-        select.innerHTML='';
-        modelDB.ledScreen.forEach((m,i)=>{ let opt=document.createElement('option'); opt.value=i; opt.textContent=`LED P${m.pitch} мм`; select.appendChild(opt); });
-        const widthCabinets=document.getElementById('ledWidthCabinets');
-        const heightCabinets=document.getElementById('ledHeightCabinets');
-        const widthMeters=document.getElementById('ledWidthMeters');
-        const heightMeters=document.getElementById('ledHeightMeters');
-        const areaSpan=document.getElementById('ledArea');
-        const resolutionSpan=document.getElementById('ledResolution');
-        const powerSpan=document.getElementById('ledPower');
-
-        function updateLED(){
-            const model=modelDB.ledScreen[parseInt(select.value)];
-            let wCabs=parseInt(widthCabinets.value)||1;
-            let hCabs=parseInt(heightCabinets.value)||1;
-            let wM=parseFloat(widthMeters.value)||0;
-            let hM=parseFloat(heightMeters.value)||0;
-            let area=0;
-            let resW=0, resH=0;
-            if(wM>0 && hM>0){
-                area=wM*hM;
-                let cabsW=Math.round(wM/0.6);
-                let cabsH=Math.round(hM/0.3375);
-                resW=Math.round(cabsW * (600 / model.pitch));
-                resH=Math.round(cabsH * (337.5 / model.pitch));
-            } else {
-                area=(wCabs*0.6)*(hCabs*0.3375);
-                resW=Math.round(wCabs * (600 / model.pitch));
-                resH=Math.round(hCabs * (337.5 / model.pitch));
-            }
-            let power=area*model.powerPerSqm;
-            areaSpan.innerText=area.toFixed(2);
-            resolutionSpan.innerText=`${resW}×${resH}`;
-            powerSpan.innerText=Math.round(power);
-            ledConfig={modelIndex:parseInt(select.value), widthCabinets:wCabs, heightCabinets:hCabs, widthMeters:wM, heightMeters:hM, area, resolution:{w:resW,h:resH}, power};
-            calculateAll();
-        }
-        select.addEventListener('change',updateLED);
-        widthCabinets.addEventListener('input',updateLED);
-        heightCabinets.addEventListener('input',updateLED);
-        widthMeters.addEventListener('input',updateLED);
-        heightMeters.addEventListener('input',updateLED);
-        updateLED();
-    }
-
-    function initSound(){
-        const mic=document.getElementById('micChannels');
-        const dsp=document.getElementById('dspType');
-        const amp=document.getElementById('ampPower');
-        const dspLat=document.getElementById('dspLatency');
-        function updateSound(){
-            soundConfig={
-                micChannels:parseInt(mic.value)||0,
-                dspType:dsp.value,
-                ampPower:parseInt(amp.value)||0,
-                dspLatency:parseFloat(dspLat.value)||0
-            };
-            calculateAll();
-        }
-        mic.addEventListener('input',updateSound);
-        dsp.addEventListener('change',updateSound);
-        amp.addEventListener('input',updateSound);
-        dspLat.addEventListener('input',updateSound);
-        updateSound();
-    }
-
     function syncVideoSettings(){
         globalSettings.resolution=document.getElementById('resolutionSidebar').value;
         globalSettings.chroma=document.getElementById('chromaSidebar').value;
@@ -2164,6 +2828,22 @@
         } else {
             showErgoCalculator();
         }
+    });
+
+    // Обработчики кнопок SOUND
+    document.querySelectorAll('.sound-mode-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const mode = btn.dataset.mode;
+            showSoundMode(mode);
+        });
+    });
+
+    // Обработчики кнопок LED
+    document.querySelectorAll('.led-mode-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const mode = btn.dataset.mode;
+            showLedMode(mode);
+        });
     });
 
     // ========== СОХРАНЕНИЕ/ЗАГРУЗКА ==========
@@ -2246,22 +2926,16 @@
                         document.getElementById('networkType').value = globalSettings.networkType;
                         document.getElementById('syncProtocol').value = globalSettings.syncProtocol;
                         document.getElementById('redundancy').checked = globalSettings.redundancy;
-                        const ledSelect = document.getElementById('ledModelSelect');
-                        if (ledSelect) ledSelect.value = ledConfig.modelIndex;
-                        document.getElementById('ledWidthCabinets').value = ledConfig.widthCabinets;
-                        document.getElementById('ledHeightCabinets').value = ledConfig.heightCabinets;
-                        document.getElementById('ledWidthMeters').value = ledConfig.widthMeters;
-                        document.getElementById('ledHeightMeters').value = ledConfig.heightMeters;
-                        document.getElementById('micChannels').value = soundConfig.micChannels;
-                        document.getElementById('dspType').value = soundConfig.dspType;
-                        document.getElementById('ampPower').value = soundConfig.ampPower;
-                        document.getElementById('dspLatency').value = soundConfig.dspLatency;
                         updateAllShortNames();
                         portManager.setSwitches(projectSwitches);
                         if (viewMode === 'single') {
                             setActivePath(activePathId);
                         } else if (viewMode === 'all') {
                             showAllTracts();
+                        } else if (viewMode === 'sound') {
+                            showSoundMode(soundConfig.activeMode || 'spl');
+                        } else if (viewMode === 'led') {
+                            showLedMode(ledConfig.activeMode || 'cabinets');
                         } else {
                             setActivePath(activePathId);
                         }
@@ -2328,7 +3002,7 @@
             });
             const frames = delay / (1000 / getFps());
             win.document.write(`<h3>${path.name} (задержка: ${delay.toFixed(2)} мс / ${frames.toFixed(2)} кадр.)</h3>`);
-            win.document.write('\\n<table border="1" cellpadding="5" width="100%">\\n<thead>\\n<tr><th>Сегмент</th><th>Устройство</th><th>Тип</th><th>Задержка (мс)</th><th>Питание</th><th>Подключение</th><th>Примечания</th></tr>\\n</thead><tbody>');
+            win.document.write('<table border="1" cellpadding="5" width="100%"><thead><tr><th>Сегмент</th><th>Устройство</th><th>Тип</th><th>Задержка (мс)</th><th>Питание</th><th>Подключение</th><th>Примечания</th> </thead><tbody>');
             [...path.sourceDevices, ...path.sinkDevices].forEach(dev => {
                 let segName = dev.segment === 'source' ? 'Начало тракта' : 'Конец тракта';
                 let devLatency = dev.latency || 0;
@@ -2386,8 +3060,27 @@
             nextPathId=1;
             nextSwitchId=1;
             activePathId=null;
-            ledConfig={modelIndex:0,widthCabinets:1,heightCabinets:1,widthMeters:0,heightMeters:0,area:0,resolution:{w:0,h:0},power:0};
-            soundConfig={micChannels:0,dspType:'builtin',ampPower:0,dspLatency:0};
+            ledConfig = {
+                activeMode: 'cabinets',
+                pitchIndex: 0,
+                cabinetPreset: '600x337.5',
+                cabinetWidth: 600,
+                cabinetHeight: 337.5,
+                cabinetsW: 1,
+                cabinetsH: 1,
+                targetResolution: 'fhd',
+                customResW: 1920,
+                customResH: 1080,
+                stitchedScreenId: null,
+                stitchCountW: 2,
+                stitchCountH: 1,
+                width_m: 0, height_m: 0, resW: 0, resH: 0, area: 0, power: 0
+            };
+            soundConfig = {
+                sensitivity: 89, sourcePower: 1, distance: 1, headroom: 9, roomGain: 3,
+                sourceType: 'point', startDistance: 1, endDistance: 16,
+                powerChangeFrom: 1, powerChangeTo: 2, activeMode: 'spl'
+            };
             for(let k in deviceCounters) deviceCounters[k]=0;
             portManager.setSwitches(projectSwitches);
             addNewPath();
@@ -2493,8 +3186,6 @@
     window.addEventListener('click',e=>{ if(e.target===modal) modal.style.display='none'; });
 
     portManager.setSwitches(projectSwitches);
-    initLED();
-    initSound();
     // Автозагрузка из localStorage
     const savedProject = localStorage.getItem('sputnik_studio_project');
     if (savedProject) {
@@ -2521,22 +3212,16 @@
                 document.getElementById('networkType').value = globalSettings.networkType;
                 document.getElementById('syncProtocol').value = globalSettings.syncProtocol;
                 document.getElementById('redundancy').checked = globalSettings.redundancy;
-                const ledSelect = document.getElementById('ledModelSelect');
-                if (ledSelect) ledSelect.value = ledConfig.modelIndex;
-                document.getElementById('ledWidthCabinets').value = ledConfig.widthCabinets;
-                document.getElementById('ledHeightCabinets').value = ledConfig.heightCabinets;
-                document.getElementById('ledWidthMeters').value = ledConfig.widthMeters;
-                document.getElementById('ledHeightMeters').value = ledConfig.heightMeters;
-                document.getElementById('micChannels').value = soundConfig.micChannels;
-                document.getElementById('dspType').value = soundConfig.dspType;
-                document.getElementById('ampPower').value = soundConfig.ampPower;
-                document.getElementById('dspLatency').value = soundConfig.dspLatency;
                 updateAllShortNames();
                 portManager.setSwitches(projectSwitches);
                 if (viewMode === 'single') {
                     setActivePath(activePathId);
                 } else if (viewMode === 'all') {
                     showAllTracts();
+                } else if (viewMode === 'sound') {
+                    showSoundMode(soundConfig.activeMode || 'spl');
+                } else if (viewMode === 'led') {
+                    showLedMode(ledConfig.activeMode || 'cabinets');
                 } else {
                     setActivePath(activePathId);
                 }
