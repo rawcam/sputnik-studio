@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Sputnik Studio v5.5.1 — AV System Designer</title>
+    <title>Sputnik Studio v5.6.0 — AV System Designer</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
@@ -319,6 +319,14 @@
         .btn-inactive {
             background: #9ca3af;
             cursor: default;
+            border-radius: 30px;
+            padding: 6px 16px;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.8rem;
+            color: white;
         }
         .btn-inactive:hover {
             background: #9ca3af;
@@ -413,10 +421,11 @@
             color: var(--text-primary);
         }
         .sidebar.collapsed .btn-secondary span,
-        .sidebar.collapsed .btn-danger span {
+        .sidebar.collapsed .btn-danger span,
+        .sidebar.collapsed .btn-inactive span {
             display: none;
         }
-        .sidebar.collapsed .btn-secondary, .sidebar.collapsed .btn-danger {
+        .sidebar.collapsed .btn-secondary, .sidebar.collapsed .btn-danger, .sidebar.collapsed .btn-inactive {
             width: 100%;
             justify-content: center;
             padding: 6px 0;
@@ -522,6 +531,14 @@
             padding: 12px;
             margin-bottom: 16px;
             border: 1px solid var(--border-light);
+        }
+        .manage-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .manage-buttons button {
+            width: 100%;
         }
     </style>
 </head>
@@ -634,18 +651,23 @@
             </div>
         </div>
 
-        <!-- УПРАВЛЕНИЕ -->
+        <!-- УПРАВЛЕНИЕ (с новыми кнопками) -->
         <div class="sidebar-section" id="manageSection">
             <div class="section-header" data-section="manage"><span><i class="fas fa-cog"></i> УПРАВЛЕНИЕ</span><i class="fas fa-angle-down"></i></div>
             <div class="section-content" id="manageContent">
-                <button class="btn-secondary" id="printReportBtnSidebar"><i class="fas fa-print"></i><span> Печать отчёта</span></button>
-                <button class="btn-secondary" id="docBtnSidebar"><i class="fas fa-book"></i><span> Документация</span></button>
-                <button class="btn-secondary" id="guideBtnSidebar"><i class="fas fa-question-circle"></i><span> Инструкция</span></button>
-                <button class="btn-danger" id="resetProjectBtn"><i class="fas fa-trash-alt"></i><span> Сброс проекта</span></button>
+                <div class="manage-buttons">
+                    <button class="btn-secondary" id="saveToBrowserBtn"><i class="fas fa-database"></i><span> Сохранить в браузере</span></button>
+                    <button class="btn-secondary" id="exportJsonBtn"><i class="fas fa-file-export"></i><span> Экспорт JSON</span></button>
+                    <button class="btn-secondary" id="importJsonBtn"><i class="fas fa-file-import"></i><span> Импорт JSON</span></button>
+                    <button class="btn-secondary" id="printReportBtnSidebar"><i class="fas fa-print"></i><span> Печать отчёта</span></button>
+                    <button class="btn-secondary" id="docBtnSidebar"><i class="fas fa-book"></i><span> Документация</span></button>
+                    <button class="btn-secondary" id="guideBtnSidebar"><i class="fas fa-question-circle"></i><span> Инструкция</span></button>
+                    <button class="btn-danger" id="resetProjectBtn"><i class="fas fa-trash-alt"></i><span> Сброс проекта</span></button>
+                </div>
             </div>
         </div>
 
-        <div class="sidebar-footer">Sputnik Studio v5.5.1<br>© 2026</div>
+        <div class="sidebar-footer">Sputnik Studio v5.6.0<br>© 2026</div>
     </div>
 
     <div class="main-content">
@@ -670,8 +692,8 @@
 <div id="docModal" class="modal">
     <div class="modal-content">
         <span class="modal-close" id="closeDocModal">&times;</span>
-        <h2>Документация Sputnik Studio v5.5.1</h2>
-        <p><strong>Sputnik Studio</strong> — профессиональный инструмент для расчёта задержек видеосигнала, сетевой нагрузки и энергопотребления в системах AV over IP, матричной коммутации, LED-экранах и видеостенах. Добавлен модуль эргономики ЭКП (расчёт расстояния до экрана и высоты символов) по методике ITPP.</p>
+        <h2>Документация Sputnik Studio v5.6.0</h2>
+        <p><strong>Sputnik Studio</strong> — профессиональный инструмент для расчёта задержек видеосигнала, сетевой нагрузки и энергопотребления в системах AV over IP, матричной коммутации, LED-экранах и видеостенах. Добавлен модуль эргономики ЭКП, сохранение и загрузка проектов.</p>
         <div class="modal-buttons"><button class="btn-primary" id="downloadDocPdf">Скачать PDF</button></div>
     </div>
 </div>
@@ -679,7 +701,7 @@
     <div class="modal-content">
         <span class="modal-close" id="closeGuideModal">&times;</span>
         <h2>Инструкция пользователя</h2>
-        <p>Используйте боковую панель для создания трактов и настройки устройств. Настройки VIDEO, NETWORK, LED, SOUND влияют на расчёты. В разделе «Эргономика ЭКП» доступен калькулятор расстояния до экрана и высоты символов.</p>
+        <p>Используйте боковую панель для создания трактов и настройки устройств. Настройки VIDEO, NETWORK, LED, SOUND влияют на расчёты. В разделе «Эргономика ЭКП» доступен калькулятор расстояния до экрана и высоты символов. Сохраняйте проекты в браузере, экспортируйте в JSON и импортируйте обратно.</p>
         <div class="modal-buttons"><button class="btn-primary" id="downloadGuidePdf">Скачать PDF</button></div>
     </div>
 </div>
@@ -698,7 +720,7 @@
 
 <script>
 (function() {
-    // ======================== БАЗА МОДЕЛЕЙ ========================
+    // ======================== БАЗА МОДЕЛЕЙ (полная, как в v5.5.1) ========================
     const modelDB = {
         source: [
             { name: "Типовой ПК", latency: 5, poe: false, powerW: 200, icon: "fa-desktop", hasNetwork: true, shortPrefix: "PC" },
@@ -794,6 +816,7 @@
 
     let ledConfig = { modelIndex: 0, widthCabinets: 1, heightCabinets: 1, widthMeters: 0, heightMeters: 0, area: 0, resolution: { w:0, h:0 }, power: 0 };
     let soundConfig = { micChannels: 0, dspType: 'builtin', ampPower: 0, dspLatency: 0 };
+    let exportCounter = 1; // для нумерации файлов экспорта
 
     const sidebarPathsList = document.getElementById('sidebarPathsList');
     const sidebarTotalBitrate = document.getElementById('sidebarTotalBitrate');
@@ -1275,7 +1298,6 @@
         activePathContainer.style.display = 'none';
         allTractsContainer.style.display = '';
         ergoCalculatorContainer.style.display = 'none';
-        // Обновляем вид кнопки
         const ergoBtn = document.getElementById('showErgoCalcBtn');
         ergoBtn.classList.remove('btn-inactive');
         ergoBtn.classList.add('btn-primary');
@@ -1284,9 +1306,7 @@
     }
 
     function showErgoCalculator() {
-        // Если калькулятор уже открыт – закрываем
         if (viewMode === 'ergo') {
-            // Возвращаемся к предыдущему режиму
             const lastMode = localStorage.getItem('lastViewMode') || 'single';
             if (lastMode === 'single') {
                 if (activePathId) setActivePath(activePathId);
@@ -1299,21 +1319,17 @@
             }
             return;
         }
-
-        // Сохраняем текущий режим перед открытием
         localStorage.setItem('lastViewMode', viewMode);
         viewMode = 'ergo';
         activePathContainer.style.display = 'none';
         allTractsContainer.style.display = 'none';
         ergoCalculatorContainer.style.display = '';
-        // Меняем вид кнопки на неактивную
         const ergoBtn = document.getElementById('showErgoCalcBtn');
         ergoBtn.classList.remove('btn-primary');
         ergoBtn.classList.add('btn-inactive');
         ergoBtn.innerHTML = '<i class="fas fa-calculator"></i> Показать калькулятор';
-
         if (ergoCalculatorContainer.innerHTML === '') {
-            // Собираем список экранов из трактов (дисплеи и LED-экраны)
+            // Собираем список экранов из трактов
             let screensList = [{ id: 'custom', name: '— Ручной ввод —', width: 0, height: 0, resolutionW: 0, resolutionH: 0 }];
             paths.forEach(path => {
                 [...path.sourceDevices, ...path.sinkDevices].forEach(dev => {
@@ -1415,7 +1431,6 @@
                 </div>
             `;
 
-            // Обработка выбора экрана
             const screenSelect = document.getElementById('ergoScreenSelect');
             const manualDiv = document.getElementById('manualScreenParams');
             const screenWidth = document.getElementById('screenWidth');
@@ -1858,6 +1873,7 @@
         globalSettings.redundancy=document.getElementById('redundancy').checked;
         calculateAll();
     }
+
     document.getElementById('resolutionSidebar').addEventListener('change',syncVideoSettings);
     document.getElementById('chromaSidebar').addEventListener('change',syncVideoSettings);
     document.getElementById('fpsSidebar').addEventListener('change',syncVideoSettings);
@@ -1873,20 +1889,199 @@
     document.getElementById('addPathBtnSidebar').addEventListener('click',()=>addNewPath());
     document.getElementById('showAllTractsBtn').addEventListener('click',()=>showAllTracts());
 
-    // Кнопка калькулятора с двумя состояниями
+    // Кнопка калькулятора
     const ergoBtn = document.getElementById('showErgoCalcBtn');
     ergoBtn.addEventListener('click', () => {
         if (viewMode === 'ergo') {
-            showErgoCalculator(); // закрывает
+            showErgoCalculator();
         } else {
-            showErgoCalculator(); // открывает
+            showErgoCalculator();
         }
     });
 
+    // ========== НОВЫЕ ФУНКЦИИ СОХРАНЕНИЯ/ЗАГРУЗКИ ==========
+    function saveToLocalStorage() {
+        const projectData = {
+            version: '5.6.0',
+            globalSettings,
+            paths,
+            projectSwitches,
+            ledConfig,
+            soundConfig,
+            nextPathId,
+            nextSwitchId,
+            activePathId,
+            viewMode
+        };
+        localStorage.setItem('sputnik_studio_project', JSON.stringify(projectData));
+        alert('Проект сохранён в браузере');
+    }
+
+    function loadFromLocalStorage() {
+        const saved = localStorage.getItem('sputnik_studio_project');
+        if (saved) {
+            if (confirm('Обнаружен сохранённый проект. Загрузить его? Текущий проект будет заменён.')) {
+                try {
+                    const data = JSON.parse(saved);
+                    globalSettings = data.globalSettings;
+                    paths = data.paths;
+                    projectSwitches = data.projectSwitches;
+                    ledConfig = data.ledConfig;
+                    soundConfig = data.soundConfig;
+                    nextPathId = data.nextPathId;
+                    nextSwitchId = data.nextSwitchId;
+                    activePathId = data.activePathId;
+                    viewMode = data.viewMode || 'single';
+                    // Обновляем DOM элементы настроек
+                    document.getElementById('resolutionSidebar').value = globalSettings.resolution;
+                    document.getElementById('chromaSidebar').value = globalSettings.chroma;
+                    document.getElementById('fpsSidebar').value = globalSettings.fps;
+                    document.getElementById('colorSpace').value = globalSettings.colorSpace;
+                    document.getElementById('bitDepth').value = globalSettings.bitDepth;
+                    document.getElementById('globalCable').value = globalSettings.cable;
+                    document.getElementById('globalMulticast').checked = globalSettings.multicast;
+                    document.getElementById('globalQoS').checked = globalSettings.qos;
+                    document.getElementById('networkType').value = globalSettings.networkType;
+                    document.getElementById('syncProtocol').value = globalSettings.syncProtocol;
+                    document.getElementById('redundancy').checked = globalSettings.redundancy;
+                    // Обновляем LED
+                    const ledSelect = document.getElementById('ledModelSelect');
+                    if (ledSelect) ledSelect.value = ledConfig.modelIndex;
+                    document.getElementById('ledWidthCabinets').value = ledConfig.widthCabinets;
+                    document.getElementById('ledHeightCabinets').value = ledConfig.heightCabinets;
+                    document.getElementById('ledWidthMeters').value = ledConfig.widthMeters;
+                    document.getElementById('ledHeightMeters').value = ledConfig.heightMeters;
+                    // Обновляем SOUND
+                    document.getElementById('micChannels').value = soundConfig.micChannels;
+                    document.getElementById('dspType').value = soundConfig.dspType;
+                    document.getElementById('ampPower').value = soundConfig.ampPower;
+                    document.getElementById('dspLatency').value = soundConfig.dspLatency;
+                    // Пересчёт коротких имён
+                    updateAllShortNames();
+                    // Перерисовка
+                    portManager.setSwitches(projectSwitches);
+                    if (viewMode === 'single') {
+                        setActivePath(activePathId);
+                    } else if (viewMode === 'all') {
+                        showAllTracts();
+                    } else {
+                        setActivePath(activePathId);
+                    }
+                    calculateAll();
+                    alert('Проект загружен');
+                } catch(e) {
+                    console.error(e);
+                    alert('Ошибка загрузки проекта');
+                }
+            }
+        } else {
+            alert('Нет сохранённого проекта в браузере');
+        }
+    }
+
+    function exportToJson() {
+        const projectData = {
+            version: '5.6.0',
+            exportDate: new Date().toISOString(),
+            globalSettings,
+            paths,
+            projectSwitches,
+            ledConfig,
+            soundConfig,
+            nextPathId,
+            nextSwitchId,
+            activePathId,
+            viewMode
+        };
+        const json = JSON.stringify(projectData, null, 2);
+        const fileName = `sputnik-studio_${exportCounter}.json`;
+        exportCounter++;
+        const blob = new Blob([json], {type: 'application/json'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        alert(`Проект экспортирован в файл ${fileName}`);
+    }
+
+    function importFromJson() {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'application/json';
+        input.onchange = e => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = ev => {
+                try {
+                    const data = JSON.parse(ev.target.result);
+                    if (confirm('Загрузить проект из файла? Текущий проект будет заменён.')) {
+                        globalSettings = data.globalSettings;
+                        paths = data.paths;
+                        projectSwitches = data.projectSwitches;
+                        ledConfig = data.ledConfig;
+                        soundConfig = data.soundConfig;
+                        nextPathId = data.nextPathId;
+                        nextSwitchId = data.nextSwitchId;
+                        activePathId = data.activePathId;
+                        viewMode = data.viewMode || 'single';
+                        // Обновляем DOM
+                        document.getElementById('resolutionSidebar').value = globalSettings.resolution;
+                        document.getElementById('chromaSidebar').value = globalSettings.chroma;
+                        document.getElementById('fpsSidebar').value = globalSettings.fps;
+                        document.getElementById('colorSpace').value = globalSettings.colorSpace;
+                        document.getElementById('bitDepth').value = globalSettings.bitDepth;
+                        document.getElementById('globalCable').value = globalSettings.cable;
+                        document.getElementById('globalMulticast').checked = globalSettings.multicast;
+                        document.getElementById('globalQoS').checked = globalSettings.qos;
+                        document.getElementById('networkType').value = globalSettings.networkType;
+                        document.getElementById('syncProtocol').value = globalSettings.syncProtocol;
+                        document.getElementById('redundancy').checked = globalSettings.redundancy;
+                        const ledSelect = document.getElementById('ledModelSelect');
+                        if (ledSelect) ledSelect.value = ledConfig.modelIndex;
+                        document.getElementById('ledWidthCabinets').value = ledConfig.widthCabinets;
+                        document.getElementById('ledHeightCabinets').value = ledConfig.heightCabinets;
+                        document.getElementById('ledWidthMeters').value = ledConfig.widthMeters;
+                        document.getElementById('ledHeightMeters').value = ledConfig.heightMeters;
+                        document.getElementById('micChannels').value = soundConfig.micChannels;
+                        document.getElementById('dspType').value = soundConfig.dspType;
+                        document.getElementById('ampPower').value = soundConfig.ampPower;
+                        document.getElementById('dspLatency').value = soundConfig.dspLatency;
+                        updateAllShortNames();
+                        portManager.setSwitches(projectSwitches);
+                        if (viewMode === 'single') {
+                            setActivePath(activePathId);
+                        } else if (viewMode === 'all') {
+                            showAllTracts();
+                        } else {
+                            setActivePath(activePathId);
+                        }
+                        calculateAll();
+                        alert('Проект загружен');
+                    }
+                } catch(err) {
+                    alert('Ошибка чтения файла: ' + err.message);
+                }
+            };
+            reader.readAsText(file);
+        };
+        input.click();
+    }
+
+    // Подключаем кнопки
+    document.getElementById('saveToBrowserBtn').addEventListener('click', saveToLocalStorage);
+    document.getElementById('exportJsonBtn').addEventListener('click', exportToJson);
+    document.getElementById('importJsonBtn').addEventListener('click', importFromJson);
+
+    // Печать отчёта (оставляем существующую)
     document.getElementById('printReportBtnSidebar').addEventListener('click',()=>{
         let win = window.open('', '_blank');
         win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Технический отчёт Sputnik Studio</title><style>body{font-family:"Segoe UI",Arial,sans-serif;margin:20px;color:#1e2b3c}h1{color:#2563eb;border-bottom:2px solid #2563eb;padding-bottom:8px}h2{color:#1e2b3c;margin-top:24px;border-left:4px solid #2563eb;padding-left:12px}h3{color:#4a5a6e;margin-top:16px}table{border-collapse:collapse;width:100%;margin:16px 0}th,td{border:1px solid #d9e1ec;padding:8px 12px;text-align:left;vertical-align:top}th{background-color:#e2edff;font-weight:600}.summary-box{background:#f9fcff;border:1px solid #d9e1ec;border-radius:8px;padding:16px;margin:16px 0}.summary-grid{display:flex;flex-wrap:wrap;gap:20px}.summary-item{flex:1;min-width:200px}.footer{margin-top:40px;font-size:12px;color:#6c757d;text-align:center;border-top:1px solid #dee2e6;padding-top:16px}</style></head><body>');
-        win.document.write('<h1>Sputnik Studio v5.5.1 — Технический отчёт</h1>');
+        win.document.write('<h1>Sputnik Studio v5.6.0 — Технический отчёт</h1>');
         win.document.write('<p><strong>Дата формирования:</strong> ' + new Date().toLocaleString() + '</p>');
         win.document.write('<h2>1. Глобальные параметры проекта</h2><div class="summary-box"><div class="summary-grid">');
         win.document.write(`<div class="summary-item"><strong>Разрешение:</strong> ${globalSettings.resolution}</div>`);
@@ -1930,7 +2125,7 @@
             });
             const frames = delay / (1000 / getFps());
             win.document.write(`<h3>${path.name} (задержка: ${delay.toFixed(2)} мс / ${frames.toFixed(2)} кадр.)</h3>`);
-            win.document.write('<table><thead><tr><th>Сегмент</th><th>Устройство</th><th>Тип</th><th>Задержка (мс)</th><th>Питание</th><th>Подключение</th><th>Примечания</th></tr></thead><tbody>');
+            win.document.write('<td><thead>汽<th>Сегмент</th><th>Устройство</th><th>Тип</th><th>Задержка (мс)</th><th>Питание</th><th>Подключение</th><th>Примечания</th> </thead><tbody>');
             [...path.sourceDevices, ...path.sinkDevices].forEach(dev => {
                 let segName = dev.segment === 'source' ? 'Вход' : 'Выход';
                 let devLatency = dev.latency || 0;
@@ -1959,7 +2154,7 @@
             });
             win.document.write('</tbody></table>');
         });
-        win.document.write('<div class="footer">Отчёт сгенерирован в Sputnik Studio v5.5.1.</div>');
+        win.document.write('<div class="footer">Отчёт сгенерирован в Sputnik Studio v5.6.0.</div>');
         win.document.write('</body></html>');
         win.document.close();
         win.print();
@@ -1982,26 +2177,26 @@
     document.getElementById('downloadGuidePdf')?.addEventListener('click',()=>window.print());
 
     function resetProject(){
-        paths=[];
-        projectSwitches=[];
-        nextPathId=1;
-        nextSwitchId=1;
-        activePathId=null;
-        ledConfig={modelIndex:0,widthCabinets:1,heightCabinets:1,widthMeters:0,heightMeters:0,area:0,resolution:{w:0,h:0},power:0};
-        soundConfig={micChannels:0,dspType:'builtin',ampPower:0,dspLatency:0};
-        for(let k in deviceCounters) deviceCounters[k]=0;
-        portManager.setSwitches(projectSwitches);
-        addNewPath();
-        calculateAll();
-        document.getElementById('resetModal').style.display='none';
+        if (confirm('Сбросить все данные? Текущий проект будет удалён.')) {
+            paths=[];
+            projectSwitches=[];
+            nextPathId=1;
+            nextSwitchId=1;
+            activePathId=null;
+            ledConfig={modelIndex:0,widthCabinets:1,heightCabinets:1,widthMeters:0,heightMeters:0,area:0,resolution:{w:0,h:0},power:0};
+            soundConfig={micChannels:0,dspType:'builtin',ampPower:0,dspLatency:0};
+            for(let k in deviceCounters) deviceCounters[k]=0;
+            portManager.setSwitches(projectSwitches);
+            addNewPath();
+            calculateAll();
+            document.getElementById('resetModal').style.display='none';
+        }
     }
     document.getElementById('resetProjectBtn').addEventListener('click',()=>document.getElementById('resetModal').style.display='flex');
     document.getElementById('closeResetModal').addEventListener('click',()=>document.getElementById('resetModal').style.display='none');
     document.getElementById('cancelResetBtn').addEventListener('click',()=>document.getElementById('resetModal').style.display='none');
     document.getElementById('saveBeforeResetBtn').addEventListener('click',()=>{
-        const projectData={version:'5.5.1',paths,projectSwitches,globalSettings,ledConfig,soundConfig};
-        localStorage.setItem('sputnik_project',JSON.stringify(projectData));
-        alert('Проект сохранён в localStorage');
+        saveToLocalStorage();
         resetProject();
     });
     document.getElementById('confirmResetBtn').addEventListener('click',resetProject);
@@ -2097,8 +2292,67 @@
     portManager.setSwitches(projectSwitches);
     initLED();
     initSound();
-    if(paths.length===0) addNewPath();
-    else setActivePath(paths[0].id);
+    // Загружаем сохранённый проект из localStorage при старте
+    const savedProject = localStorage.getItem('sputnik_studio_project');
+    if (savedProject) {
+        if (confirm('Обнаружен сохранённый проект. Загрузить его?')) {
+            try {
+                const data = JSON.parse(savedProject);
+                globalSettings = data.globalSettings;
+                paths = data.paths;
+                projectSwitches = data.projectSwitches;
+                ledConfig = data.ledConfig;
+                soundConfig = data.soundConfig;
+                nextPathId = data.nextPathId;
+                nextSwitchId = data.nextSwitchId;
+                activePathId = data.activePathId;
+                viewMode = data.viewMode || 'single';
+                document.getElementById('resolutionSidebar').value = globalSettings.resolution;
+                document.getElementById('chromaSidebar').value = globalSettings.chroma;
+                document.getElementById('fpsSidebar').value = globalSettings.fps;
+                document.getElementById('colorSpace').value = globalSettings.colorSpace;
+                document.getElementById('bitDepth').value = globalSettings.bitDepth;
+                document.getElementById('globalCable').value = globalSettings.cable;
+                document.getElementById('globalMulticast').checked = globalSettings.multicast;
+                document.getElementById('globalQoS').checked = globalSettings.qos;
+                document.getElementById('networkType').value = globalSettings.networkType;
+                document.getElementById('syncProtocol').value = globalSettings.syncProtocol;
+                document.getElementById('redundancy').checked = globalSettings.redundancy;
+                const ledSelect = document.getElementById('ledModelSelect');
+                if (ledSelect) ledSelect.value = ledConfig.modelIndex;
+                document.getElementById('ledWidthCabinets').value = ledConfig.widthCabinets;
+                document.getElementById('ledHeightCabinets').value = ledConfig.heightCabinets;
+                document.getElementById('ledWidthMeters').value = ledConfig.widthMeters;
+                document.getElementById('ledHeightMeters').value = ledConfig.heightMeters;
+                document.getElementById('micChannels').value = soundConfig.micChannels;
+                document.getElementById('dspType').value = soundConfig.dspType;
+                document.getElementById('ampPower').value = soundConfig.ampPower;
+                document.getElementById('dspLatency').value = soundConfig.dspLatency;
+                updateAllShortNames();
+                portManager.setSwitches(projectSwitches);
+                if (viewMode === 'single') {
+                    setActivePath(activePathId);
+                } else if (viewMode === 'all') {
+                    showAllTracts();
+                } else {
+                    setActivePath(activePathId);
+                }
+                calculateAll();
+                alert('Проект загружен из браузера');
+            } catch(e) {
+                console.error(e);
+                // Если ошибка, просто создаём новый проект
+                if(paths.length===0) addNewPath();
+                else setActivePath(paths[0].id);
+            }
+        } else {
+            if(paths.length===0) addNewPath();
+            else setActivePath(paths[0].id);
+        }
+    } else {
+        if(paths.length===0) addNewPath();
+        else setActivePath(paths[0].id);
+    }
 })();
 </script>
 </body>
