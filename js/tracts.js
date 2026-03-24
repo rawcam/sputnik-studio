@@ -4,7 +4,6 @@ const TractsModule = (function() {
     let currentModalCallback = null;
     let portManager = null;
 
-    // Используем Utils для генерации имён
     function createDevice(type, modelIndex, pathId, segment) {
         const utils = Utils;
         let model;
@@ -34,7 +33,6 @@ const TractsModule = (function() {
         if (base.poe && !base.poePower) base.poePower = 15;
         if (base.poe && base.poeEnabled === undefined) base.poeEnabled = false;
         
-        // Корректируем префикс для rx и tx
         if (base.type === 'rx') base.shortPrefix = 'RX';
         if (base.type === 'tx') base.shortPrefix = 'TX';
         
@@ -514,6 +512,7 @@ const TractsModule = (function() {
 
     function setActivePath(id) {
         const state = AppState.getState();
+        if (state.activePathId === id) return;
         state.activePathId = id;
         state.viewMode = 'single';
         AppState.setState(state);
@@ -688,9 +687,17 @@ const TractsModule = (function() {
         // Обновление отображения в зависимости от viewMode
         if (state.viewMode === 'single') {
             const activePath = state.paths.find(p => p.id === state.activePathId);
-            if (activePath) renderSinglePath(activePath);
-            else if (state.paths.length) setActivePath(state.paths[0].id);
-            else renderEmptyState();
+            if (activePath) {
+                renderSinglePath(activePath);
+            } else if (state.paths.length) {
+                if (state.activePathId === null) {
+                    setActivePath(state.paths[0].id);
+                } else {
+                    renderEmptyState();
+                }
+            } else {
+                renderEmptyState();
+            }
         } else if (state.viewMode === 'all') {
             renderAllTracts();
         }
@@ -704,11 +711,9 @@ const TractsModule = (function() {
             calculateAll();
         });
 
-        // Подписка на кнопки управления трактами
         document.getElementById('addPathBtnSidebar').addEventListener('click', () => addNewPath());
         document.getElementById('showAllTractsBtn').addEventListener('click', () => showAllTracts());
 
-        // Модальное окно добавления устройства
         const modal = document.getElementById('addDeviceModal');
         const modalAddBtn = document.getElementById('modalAddBtn');
         const modalCancelBtn = document.getElementById('modalCancelBtn');
@@ -762,7 +767,6 @@ const TractsModule = (function() {
         });
         window.addEventListener('click', e => { if (e.target === modal) modal.style.display = 'none'; });
 
-        // Начальная инициализация
         const initialState = AppState.getState();
         if (initialState.paths.length === 0) addNewPath();
         else setActivePath(initialState.paths[0].id);
