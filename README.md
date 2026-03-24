@@ -1,2 +1,0 @@
-# sputnik-studio
-video calculator
