@@ -38,16 +38,17 @@ const StorageModule = (function() {
             viewMode: state.viewMode
         };
         const json = JSON.stringify(projectData, null, 2);
-        const blob = new Blob([json], { type: 'application/json' });
+        const fileName = `sputnik-studio_${new Date().toISOString().slice(0,19).replace(/:/g, '-')}.json`;
+        const blob = new Blob([json], {type: 'application/json'});
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `sputnik-studio_${new Date().toISOString().slice(0,19).replace(/:/g, '-')}.json`;
+        a.download = fileName;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
-        alert('Проект экспортирован в JSON');
+        alert(`Проект экспортирован в файл ${fileName}`);
     }
 
     function importFromJson() {
@@ -62,6 +63,7 @@ const StorageModule = (function() {
                 try {
                     const data = JSON.parse(ev.target.result);
                     if (confirm('Загрузить проект из файла? Текущий проект будет заменён.')) {
+                        // Обновляем состояние
                         AppState.setState({
                             globalSettings: data.globalSettings,
                             paths: data.paths,
@@ -74,7 +76,20 @@ const StorageModule = (function() {
                             activePathId: data.activePathId,
                             viewMode: data.viewMode || 'single'
                         });
-                        // Обновляем короткие имена после загрузки
+                        // Обновляем DOM элементы видео/сети
+                        const settings = data.globalSettings;
+                        document.getElementById('resolutionSidebar').value = settings.resolution;
+                        document.getElementById('chromaSidebar').value = settings.chroma;
+                        document.getElementById('fpsSidebar').value = settings.fps;
+                        document.getElementById('colorSpace').value = settings.colorSpace;
+                        document.getElementById('bitDepth').value = settings.bitDepth;
+                        document.getElementById('globalCable').value = settings.cable;
+                        document.getElementById('globalMulticast').checked = settings.multicast;
+                        document.getElementById('globalQoS').checked = settings.qos;
+                        document.getElementById('networkType').value = settings.networkType;
+                        document.getElementById('syncProtocol').value = settings.syncProtocol;
+                        document.getElementById('redundancy').checked = settings.redundancy;
+
                         Utils.updateAllShortNames(AppState.getState());
                         alert('Проект загружен');
                     }
@@ -91,51 +106,69 @@ const StorageModule = (function() {
         const state = AppState.getState();
         const printWindow = window.open('', '_blank');
         printWindow.document.write(`
+            <!DOCTYPE html>
             <html>
             <head><title>Отчёт Sputnik Studio</title>
             <style>
-                body { font-family: sans-serif; margin: 2cm; }
-                h1, h2 { color: #2563eb; }
-                table { border-collapse: collapse; width: 100%; margin: 1em 0; }
-                th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+                body { font-family: Arial, sans-serif; margin: 20px; }
+                h1 { color: #2563eb; }
+                table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
+                th, td { border: 1px solid #ccc; padding: 8px; text-align: left; vertical-align: top; }
                 th { background: #f0f0f0; }
-                .summary { margin: 1em 0; }
+                .section { margin-bottom: 30px; }
             </style>
             </head>
             <body>
-            <h1>Sputnik Studio – Отчёт проекта</h1>
+            <h1>Sputnik Studio – Отчёт по проекту</h1>
             <p>Дата: ${new Date().toLocaleString()}</p>
-            <h2>Общие настройки</h2>
-            <p>Разрешение: ${state.globalSettings.resolution}<br>
-            Субдискретизация: ${state.globalSettings.chroma}<br>
-            FPS: ${state.globalSettings.fps}<br>
-            Цветовое пространство: ${state.globalSettings.colorSpace}<br>
-            Глубина цвета: ${state.globalSettings.bitDepth} бит</p>
-            <h2>Сеть</h2>
-            <p>Среда передачи: ${state.globalSettings.cable}<br>
-            Multicast: ${state.globalSettings.multicast ? 'Вкл' : 'Выкл'}<br>
-            QoS: ${state.globalSettings.qos ? 'Вкл' : 'Выкл'}<br>
-            Тип сети: ${state.globalSettings.networkType}<br>
-            Синхронизация: ${state.globalSettings.syncProtocol}<br>
-            Резервирование: ${state.globalSettings.redundancy ? 'Да' : 'Нет'}</p>
-            <h2>Тракты</h2>
-            ${state.paths.map((path, idx) => `
-                <h3>${path.name}</h3>
-                <p>Источники: ${path.sourceDevices.map(d => d.name).join(', ') || '—'}<br>
-                Приёмники: ${path.sinkDevices.map(d => d.name).join(', ') || '—'}</p>
-            `).join('')}
-            <h2>LED-экран</h2>
-            <p>Режим: ${state.ledConfig.activeMode}<br>
-            Размер: ${state.ledConfig.width_m.toFixed(2)}×${state.ledConfig.height_m.toFixed(2)} м<br>
-            Разрешение: ${state.ledConfig.resW}×${state.ledConfig.resH}<br>
-            Площадь: ${state.ledConfig.area.toFixed(2)} м²<br>
-            Мощность: ${Math.round(state.ledConfig.power)} Вт</p>
-            <h2>Акустика</h2>
-            <p>Активный режим: ${state.soundConfig.activeMode}<br>
-            Параметры: чувствительность ${state.soundConfig.sensitivity} дБ, мощность ${state.soundConfig.sourcePower} Вт, расстояние ${state.soundConfig.distance} м</p>
-            <h2>ВКС</h2>
-            <p>Активный режим: ${state.vcConfig.activeMode}<br>
-            Платформа: ${state.vcConfig.codecPreset}, разрешение ${state.vcConfig.resolution}, FPS ${state.vcConfig.fps}</p>
+            <div class="section">
+                <h2>Видеонастройки</h2>
+                <p>Разрешение: ${state.globalSettings.resolution}</p>
+                <p>Субдискретизация: ${state.globalSettings.chroma}</p>
+                <p>FPS: ${state.globalSettings.fps}</p>
+                <p>Цветовое пространство: ${state.globalSettings.colorSpace}</p>
+                <p>Глубина цвета: ${state.globalSettings.bitDepth} бит</p>
+            </div>
+            <div class="section">
+                <h2>Сетевые настройки</h2>
+                <p>Среда: ${state.globalSettings.cable}</p>
+                <p>Multicast: ${state.globalSettings.multicast ? 'Вкл' : 'Выкл'}</p>
+                <p>QoS: ${state.globalSettings.qos ? 'Вкл' : 'Выкл'}</p>
+                <p>Тип сети: ${state.globalSettings.networkType}</p>
+                <p>Синхронизация: ${state.globalSettings.syncProtocol}</p>
+                <p>Резервирование: ${state.globalSettings.redundancy ? 'Да' : 'Нет'}</p>
+            </div>
+            <div class="section">
+                <h2>Тракты (${state.paths.length})</h2>
+                ${state.paths.map(path => `
+                    <h3>${path.name}</h3>
+                    <p><strong>Источники:</strong> ${path.sourceDevices.map(d => d.name).join(', ') || '—'}</p>
+                    <p><strong>Приёмники:</strong> ${path.sinkDevices.map(d => d.name).join(', ') || '—'}</p>
+                `).join('')}
+            </div>
+            <div class="section">
+                <h2>LED-конфигурация</h2>
+                <p>Режим: ${state.ledConfig.activeMode}</p>
+                <p>Размер экрана: ${state.ledConfig.width_m.toFixed(2)}×${state.ledConfig.height_m.toFixed(2)} м</p>
+                <p>Разрешение: ${state.ledConfig.resW}×${state.ledConfig.resH}</p>
+                <p>Площадь: ${state.ledConfig.area.toFixed(2)} м²</p>
+                <p>Мощность: ${Math.round(state.ledConfig.power)} Вт</p>
+            </div>
+            <div class="section">
+                <h2>Акустические настройки</h2>
+                <p>Активный режим: ${state.soundConfig.activeMode}</p>
+                <p>Чувствительность: ${state.soundConfig.sensitivity} дБ</p>
+                <p>Мощность источника: ${state.soundConfig.sourcePower} Вт</p>
+                <p>Расстояние: ${state.soundConfig.distance} м</p>
+                <p>RT60: ${state.soundConfig.roomVolume} м³, α=${state.soundConfig.avgAbsorption}</p>
+            </div>
+            <div class="section">
+                <h2>ВКС</h2>
+                <p>Активный режим: ${state.vcConfig.activeMode}</p>
+                <p>Кодек: ${state.vcConfig.codecPreset}</p>
+                <p>Разрешение: ${state.vcConfig.resolution}</p>
+                <p>Участников: ${state.vcConfig.participants}</p>
+            </div>
             </body>
             </html>
         `);
@@ -144,113 +177,160 @@ const StorageModule = (function() {
     }
 
     function resetProject() {
-        if (!confirm('Сбросить все данные? Текущий проект будет удалён.')) return;
-        const defaultState = {
-            globalSettings: {
-                resolution: '4K', chroma: '422', fps: 60, colorSpace: 'YCbCr', bitDepth: 10,
-                cable: 'Cat6', multicast: false, qos: false, networkType: 'managed', syncProtocol: 'ptp', redundancy: false
-            },
-            paths: [],
-            projectSwitches: [],
-            ledConfig: {
-                activeMode: 'cabinets', pitchIndex: 0, cabinetPreset: '600x337.5', cabinetWidth: 600, cabinetHeight: 337.5,
-                cabinetsW: 1, cabinetsH: 1, targetResolution: 'fhd', customResW: 1920, customResH: 1080,
-                stitchedScreenId: null, stitchCountW: 2, stitchCountH: 1,
-                width_m: 0, height_m: 0, resW: 0, resH: 0, area: 0, power: 0
-            },
-            soundConfig: {
-                sensitivity: 89, sourcePower: 1, distance: 1, headroom: 9, roomGain: 3,
-                sourceType: 'point', startDistance: 1, endDistance: 16,
-                powerChangeFrom: 1, powerChangeTo: 2, activeMode: 'spl',
-                roomVolume: 200, roomArea: 100, avgAbsorption: 0.2,
-                roomLength: 10, roomWidth: 10, roomHeight: 3, speakerPower: 30, speakerSensitivity: 90, requiredSPL: 85
-            },
-            vcConfig: {
-                activeMode: 'codec', codecPreset: 'trueconf', resolution: '1080p', fps: 30, participants: 2, multipointParticipants: 4
-            },
-            nextPathId: 1,
-            nextSwitchId: 1,
-            activePathId: null,
-            viewMode: 'single'
-        };
-        AppState.setState(defaultState);
-        // Добавляем один тракт по умолчанию
-        const state = AppState.getState();
-        if (state.paths.length === 0) {
-            state.paths.push({ id: state.nextPathId++, name: 'Тракт 1', sourceDevices: [], sinkDevices: [] });
-            state.activePathId = 1;
-            AppState.setState(state);
+        if (confirm('Сбросить все данные? Текущий проект будет удалён.')) {
+            // Сброс состояния к начальному
+            const newState = {
+                globalSettings: {
+                    resolution: '4K',
+                    chroma: '422',
+                    fps: 60,
+                    colorSpace: 'YCbCr',
+                    bitDepth: 10,
+                    cable: 'Cat6',
+                    multicast: false,
+                    qos: false,
+                    networkType: 'managed',
+                    syncProtocol: 'ptp',
+                    redundancy: false
+                },
+                paths: [],
+                projectSwitches: [],
+                ledConfig: {
+                    activeMode: 'cabinets',
+                    pitchIndex: 0,
+                    cabinetPreset: '600x337.5',
+                    cabinetWidth: 600,
+                    cabinetHeight: 337.5,
+                    cabinetsW: 1,
+                    cabinetsH: 1,
+                    targetResolution: 'fhd',
+                    customResW: 1920,
+                    customResH: 1080,
+                    stitchedScreenId: null,
+                    stitchCountW: 2,
+                    stitchCountH: 1,
+                    width_m: 0, height_m: 0, resW: 0, resH: 0, area: 0, power: 0
+                },
+                soundConfig: {
+                    sensitivity: 89, sourcePower: 1, distance: 1, headroom: 9, roomGain: 3,
+                    sourceType: 'point', startDistance: 1, endDistance: 16,
+                    powerChangeFrom: 1, powerChangeTo: 2, activeMode: 'spl',
+                    roomVolume: 200, roomArea: 100, avgAbsorption: 0.2,
+                    roomLength: 10, roomWidth: 10, roomHeight: 3, speakerPower: 30, speakerSensitivity: 90, requiredSPL: 85
+                },
+                vcConfig: {
+                    activeMode: 'codec',
+                    codecPreset: 'trueconf',
+                    resolution: '1080p',
+                    fps: 30,
+                    participants: 2,
+                    multipointParticipants: 4
+                },
+                nextPathId: 1,
+                nextSwitchId: 1,
+                activePathId: null,
+                viewMode: 'single'
+            };
+            AppState.setState(newState);
+            // Обновляем DOM элементы видео/сети
+            document.getElementById('resolutionSidebar').value = newState.globalSettings.resolution;
+            document.getElementById('chromaSidebar').value = newState.globalSettings.chroma;
+            document.getElementById('fpsSidebar').value = newState.globalSettings.fps;
+            document.getElementById('colorSpace').value = newState.globalSettings.colorSpace;
+            document.getElementById('bitDepth').value = newState.globalSettings.bitDepth;
+            document.getElementById('globalCable').value = newState.globalSettings.cable;
+            document.getElementById('globalMulticast').checked = newState.globalSettings.multicast;
+            document.getElementById('globalQoS').checked = newState.globalSettings.qos;
+            document.getElementById('networkType').value = newState.globalSettings.networkType;
+            document.getElementById('syncProtocol').value = newState.globalSettings.syncProtocol;
+            document.getElementById('redundancy').checked = newState.globalSettings.redundancy;
+
+            Utils.updateAllShortNames(newState);
+            alert('Проект сброшен');
         }
-        Utils.updateAllShortNames(state);
-        alert('Проект сброшен');
     }
 
     function init() {
-        unsubscribe = AppState.subscribe((newState) => {
-            // При любом изменении состояния можно автосохранять, но для производительности не будем
-        });
+        // Загрузка сохранённого проекта при старте, если есть
+        const savedProject = localStorage.getItem('sputnik_studio_project');
+        if (savedProject && confirm('Обнаружен сохранённый проект. Загрузить его?')) {
+            try {
+                const data = JSON.parse(savedProject);
+                AppState.setState({
+                    globalSettings: data.globalSettings,
+                    paths: data.paths,
+                    projectSwitches: data.projectSwitches,
+                    ledConfig: data.ledConfig,
+                    soundConfig: data.soundConfig,
+                    vcConfig: data.vcConfig,
+                    nextPathId: data.nextPathId,
+                    nextSwitchId: data.nextSwitchId,
+                    activePathId: data.activePathId,
+                    viewMode: data.viewMode || 'single'
+                });
+                // Обновляем DOM
+                const settings = data.globalSettings;
+                document.getElementById('resolutionSidebar').value = settings.resolution;
+                document.getElementById('chromaSidebar').value = settings.chroma;
+                document.getElementById('fpsSidebar').value = settings.fps;
+                document.getElementById('colorSpace').value = settings.colorSpace;
+                document.getElementById('bitDepth').value = settings.bitDepth;
+                document.getElementById('globalCable').value = settings.cable;
+                document.getElementById('globalMulticast').checked = settings.multicast;
+                document.getElementById('globalQoS').checked = settings.qos;
+                document.getElementById('networkType').value = settings.networkType;
+                document.getElementById('syncProtocol').value = settings.syncProtocol;
+                document.getElementById('redundancy').checked = settings.redundancy;
+                Utils.updateAllShortNames(AppState.getState());
+                alert('Проект загружен из браузера');
+            } catch(e) {
+                console.error(e);
+            }
+        } else {
+            // Если нет сохранённого, создаём дефолтный тракт
+            const state = AppState.getState();
+            if (state.paths.length === 0) {
+                const newPath = { id: state.nextPathId++, name: `Тракт ${state.nextPathId - 1}`, sourceDevices: [], sinkDevices: [] };
+                state.paths.push(newPath);
+                AppState.setState({ activePathId: newPath.id });
+            }
+        }
 
-        // Кнопки управления
+        // Подписка на изменения (можно не делать, но оставим для совместимости)
+        unsubscribe = AppState.subscribe(() => {});
+
+        // Обработчики кнопок управления
         document.getElementById('saveToBrowserBtn').addEventListener('click', saveToLocalStorage);
         document.getElementById('exportJsonBtn').addEventListener('click', exportToJson);
         document.getElementById('importJsonBtn').addEventListener('click', importFromJson);
         document.getElementById('printReportBtnSidebar').addEventListener('click', printReport);
         document.getElementById('resetProjectBtn').addEventListener('click', () => {
-            const modal = document.getElementById('resetModal');
-            if (modal) modal.style.display = 'flex';
+            const resetModal = document.getElementById('resetModal');
+            if (resetModal) resetModal.style.display = 'flex';
         });
-        document.getElementById('confirmResetBtn').addEventListener('click', () => {
-            resetProject();
-            document.getElementById('resetModal').style.display = 'none';
-        });
-        document.getElementById('saveBeforeResetBtn').addEventListener('click', () => {
-            saveToLocalStorage();
-            resetProject();
-            document.getElementById('resetModal').style.display = 'none';
-        });
-        document.getElementById('cancelResetBtn').addEventListener('click', () => {
-            document.getElementById('resetModal').style.display = 'none';
-        });
-        document.getElementById('closeResetModal').addEventListener('click', () => {
-            document.getElementById('resetModal').style.display = 'none';
-        });
-
-        // Wiki (заглушка)
         document.getElementById('wikiBtnSidebar').addEventListener('click', () => {
             window.open('wiki.html', '_blank');
         });
 
-        // Восстановление из localStorage при старте
-        const saved = localStorage.getItem('sputnik_studio_project');
-        if (saved) {
-            if (confirm('Обнаружен сохранённый проект. Загрузить его?')) {
-                try {
-                    const data = JSON.parse(saved);
-                    AppState.setState({
-                        globalSettings: data.globalSettings,
-                        paths: data.paths,
-                        projectSwitches: data.projectSwitches,
-                        ledConfig: data.ledConfig,
-                        soundConfig: data.soundConfig,
-                        vcConfig: data.vcConfig,
-                        nextPathId: data.nextPathId,
-                        nextSwitchId: data.nextSwitchId,
-                        activePathId: data.activePathId,
-                        viewMode: data.viewMode || 'single'
-                    });
-                    Utils.updateAllShortNames(AppState.getState());
-                    alert('Проект загружен из браузера');
-                } catch(e) { console.error(e); }
-            }
-        } else {
-            // Если нет сохранённого, создаём тракт по умолчанию
-            const state = AppState.getState();
-            if (state.paths.length === 0) {
-                state.paths.push({ id: state.nextPathId++, name: 'Тракт 1', sourceDevices: [], sinkDevices: [] });
-                state.activePathId = 1;
-                AppState.setState(state);
-            }
-        }
+        // Модалка сброса
+        const resetModal = document.getElementById('resetModal');
+        const closeResetModal = document.getElementById('closeResetModal');
+        const cancelResetBtn = document.getElementById('cancelResetBtn');
+        const confirmResetBtn = document.getElementById('confirmResetBtn');
+        const saveBeforeResetBtn = document.getElementById('saveBeforeResetBtn');
+
+        if (closeResetModal) closeResetModal.addEventListener('click', () => resetModal.style.display = 'none');
+        if (cancelResetBtn) cancelResetBtn.addEventListener('click', () => resetModal.style.display = 'none');
+        if (confirmResetBtn) confirmResetBtn.addEventListener('click', () => {
+            resetModal.style.display = 'none';
+            resetProject();
+        });
+        if (saveBeforeResetBtn) saveBeforeResetBtn.addEventListener('click', () => {
+            saveToLocalStorage();
+            resetModal.style.display = 'none';
+            resetProject();
+        });
+        window.addEventListener('click', e => { if (e.target === resetModal) resetModal.style.display = 'none'; });
     }
 
     function destroy() {
