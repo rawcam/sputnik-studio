@@ -4,46 +4,14 @@ const TractsModule = (function() {
     let currentModalCallback = null;
     let portManager = null;
 
-    // Вспомогательные функции для работы с именами
-    function getShortName(dev) {
-        let prefix = dev.shortPrefix;
-        if (!prefix) {
-            if (dev.type === 'source') prefix = 'SRC';
-            else if (dev.type === 'tx') prefix = 'TX';
-            else if (dev.type === 'rx') prefix = 'RX';
-            else prefix = 'DEV';
-        }
-        const state = AppState.getState();
-        const allDevices = [];
-        state.paths.forEach(p => allDevices.push(...p.sourceDevices, ...p.sinkDevices));
-        allDevices.push(...state.projectSwitches);
-        let maxNum = 0;
-        const regex = new RegExp(`^${prefix}(\\d+)$`);
-        allDevices.forEach(d => {
-            const match = d.shortName ? d.shortName.match(regex) : null;
-            if (match) maxNum = Math.max(maxNum, parseInt(match[1]));
-        });
-        return prefix + (maxNum + 1);
-    }
-
-    function updateAllShortNames() {
-        const state = AppState.getState();
-        const allDevices = [];
-        state.paths.forEach(p => allDevices.push(...p.sourceDevices, ...p.sinkDevices));
-        allDevices.push(...state.projectSwitches);
-        for (let dev of allDevices) {
-            dev.shortName = getShortName(dev);
-        }
-        // Обновляем состояние
-        AppState.setState({});
-    }
-
+    // Используем Utils для генерации имён
     function createDevice(type, modelIndex, pathId, segment) {
         const utils = Utils;
         let model;
         if (type === 'tx' || type === 'rx') model = utils.modelDB.tx[modelIndex];
         else model = utils.modelDB[type][modelIndex];
         if (!model) return null;
+        
         let base = {
             id: Date.now() + Math.random(),
             type: type,
@@ -65,6 +33,11 @@ const TractsModule = (function() {
         Object.assign(base, model);
         if (base.poe && !base.poePower) base.poePower = 15;
         if (base.poe && base.poeEnabled === undefined) base.poeEnabled = false;
+        
+        // Корректируем префикс для rx и tx
+        if (base.type === 'rx') base.shortPrefix = 'RX';
+        if (base.type === 'tx') base.shortPrefix = 'TX';
+        
         return base;
     }
 
@@ -325,7 +298,7 @@ const TractsModule = (function() {
                     if (idx !== -1) { state.projectSwitches.splice(idx, 1); updated = true; }
                 }
                 if (updated) {
-                    updateAllShortNames();
+                    Utils.updateAllShortNames(state);
                     AppState.setState(state);
                     calculateAll();
                 }
@@ -379,7 +352,7 @@ const TractsModule = (function() {
                     if (idx !== -1) { state.projectSwitches.splice(idx, 1); updated = true; }
                 }
                 if (updated) {
-                    updateAllShortNames();
+                    Utils.updateAllShortNames(state);
                     AppState.setState(state);
                     calculateAll();
                 }
@@ -754,7 +727,7 @@ const TractsModule = (function() {
                     let newMatrix = createMatrix(type, modelIndex);
                     if (newMatrix) {
                         state.projectSwitches.push(newMatrix);
-                        updateAllShortNames();
+                        Utils.updateAllShortNames(state);
                         AppState.setState(state);
                         calculateAll();
                     }
@@ -762,7 +735,7 @@ const TractsModule = (function() {
                     let newSwitch = createSwitch(type, modelIndex);
                     if (newSwitch) {
                         state.projectSwitches.push(newSwitch);
-                        updateAllShortNames();
+                        Utils.updateAllShortNames(state);
                         AppState.setState(state);
                         calculateAll();
                     }
@@ -774,7 +747,7 @@ const TractsModule = (function() {
                 if (newDev) {
                     if (currentModalCallback.segment === 'source') path.sourceDevices.push(newDev);
                     else if (currentModalCallback.segment === 'sink') path.sinkDevices.push(newDev);
-                    updateAllShortNames();
+                    Utils.updateAllShortNames(state);
                     AppState.setState(state);
                     calculateAll();
                 }
