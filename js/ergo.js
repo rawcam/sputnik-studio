@@ -187,43 +187,61 @@ const ErgoModule = (function() {
             });
         });
 
-        // ========== КНОПКА ЗАКРЫТИЯ ==========
-        const closeBtn = container.querySelector('#closeErgoBtn');
-        if (closeBtn) {
-            closeBtn.addEventListener('click', () => {
-                // Возвращаемся к предыдущему режиму (тракты)
-                const state = AppState.getState();
-                const lastViewMode = localStorage.getItem('lastViewMode') || 'single';
-                if (lastViewMode === 'single') {
-                    if (state.activePathId) {
-                        state.viewMode = 'single';
-                        AppState.setState(state);
-                    } else if (state.paths.length) {
-                        state.viewMode = 'single';
-                        state.activePathId = state.paths[0].id;
-                        AppState.setState(state);
-                    } else {
-                        // Создаём тракт, если их нет
-                        const newPath = { id: state.nextPathId++, name: `Тракт ${state.nextPathId - 1}`, sourceDevices: [], sinkDevices: [] };
-                        state.paths.push(newPath);
-                        state.activePathId = newPath.id;
-                        state.viewMode = 'single';
-                        AppState.setState(state);
-                    }
-                } else {
-                    state.viewMode = lastViewMode;
-                    AppState.setState(state);
-                }
-                // Восстанавливаем кнопку в сайдбаре
-                const ergoBtn = document.getElementById('showErgoCalcBtn');
-                if (ergoBtn) {
-                    ergoBtn.classList.remove('btn-inactive');
-                    ergoBtn.classList.add('btn-primary');
-                    ergoBtn.innerHTML = '<i class="fas fa-calculator"></i> Показать калькулятор';
-                }
-            });
+       // ========== КНОПКА ЗАКРЫТИЯ ==========
+const closeBtn = container.querySelector('#closeErgoBtn');
+if (closeBtn) {
+    closeBtn.addEventListener('click', () => {
+        console.log('Закрытие эргономического калькулятора');
+        // Возвращаемся к предыдущему режиму (тракты)
+        const state = AppState.getState();
+        const lastViewMode = localStorage.getItem('lastViewMode') || 'single';
+        console.log('lastViewMode:', lastViewMode);
+        
+        // Восстанавливаем viewMode
+        if (lastViewMode === 'single') {
+            if (state.activePathId) {
+                state.viewMode = 'single';
+                AppState.setState(state);
+            } else if (state.paths.length) {
+                state.viewMode = 'single';
+                state.activePathId = state.paths[0].id;
+                AppState.setState(state);
+            } else {
+                // Создаём тракт, если их нет
+                const newPath = { id: state.nextPathId++, name: `Тракт ${state.nextPathId - 1}`, sourceDevices: [], sinkDevices: [] };
+                state.paths.push(newPath);
+                state.activePathId = newPath.id;
+                state.viewMode = 'single';
+                AppState.setState(state);
+            }
+        } else {
+            state.viewMode = lastViewMode;
+            AppState.setState(state);
         }
-
+        
+        // Скрываем контейнер эргономики
+        const ergoContainer = document.getElementById('ergoCalculatorContainer');
+        if (ergoContainer) ergoContainer.style.display = 'none';
+        
+        // Показываем соответствующий контейнер трактов
+        if (state.viewMode === 'single') {
+            document.getElementById('activePathContainer').style.display = '';
+        } else {
+            document.getElementById('allTractsContainer').style.display = '';
+        }
+        
+        // Восстанавливаем кнопку в сайдбаре
+        const ergoBtn = document.getElementById('showErgoCalcBtn');
+        if (ergoBtn) {
+            ergoBtn.classList.remove('btn-inactive');
+            ergoBtn.classList.add('btn-primary');
+            ergoBtn.innerHTML = '<i class="fas fa-calculator"></i> Показать калькулятор';
+        }
+        
+        // Принудительно пересчитываем всё
+        if (typeof calculateAll === 'function') calculateAll();
+    });
+}
         updateDistanceCalculations();
         updateZOV();
     }
