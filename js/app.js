@@ -1,6 +1,6 @@
 // app.js
 (function() {
-    // Инициализируем все модули
+    // Инициализация всех модулей
     Accordion.init();
     VideoModule.init();
     NetworkModule.init();
@@ -16,12 +16,12 @@
         function setTheme(theme) {
             if(theme === 'dark'){
                 document.body.classList.add('dark');
-                themeSwitch.innerHTML='<i class="fas fa-moon"></i>';
-                localStorage.setItem('theme','dark');
+                themeSwitch.innerHTML = '<i class="fas fa-moon"></i>';
+                localStorage.setItem('theme', 'dark');
             } else {
                 document.body.classList.remove('dark');
-                themeSwitch.innerHTML='<i class="fas fa-sun"></i>';
-                localStorage.setItem('theme','light');
+                themeSwitch.innerHTML = '<i class="fas fa-sun"></i>';
+                localStorage.setItem('theme', 'light');
             }
         }
         themeSwitch.addEventListener('click', () => {
@@ -37,12 +37,12 @@
         function setSidebarCollapsed(collapsed) {
             if(collapsed){
                 sidebar.classList.add('collapsed');
-                collapseBtn.innerHTML='<i class="fas fa-chevron-right"></i>';
-                localStorage.setItem('sidebarCollapsed','true');
+                collapseBtn.innerHTML = '<i class="fas fa-chevron-right"></i>';
+                localStorage.setItem('sidebarCollapsed', 'true');
             } else {
                 sidebar.classList.remove('collapsed');
-                collapseBtn.innerHTML='<i class="fas fa-chevron-left"></i>';
-                localStorage.setItem('sidebarCollapsed','false');
+                collapseBtn.innerHTML = '<i class="fas fa-chevron-left"></i>';
+                localStorage.setItem('sidebarCollapsed', 'false');
             }
         }
         collapseBtn.addEventListener('click', () => setSidebarCollapsed(!sidebar.classList.contains('collapsed')));
@@ -54,7 +54,7 @@
         const mobileToggle = document.getElementById('mobileMenuToggle');
         mobileToggle.addEventListener('click', () => sidebar.classList.toggle('open'));
         document.addEventListener('click', e => {
-            if(window.innerWidth<=768 && sidebar.classList.contains('open') && !sidebar.contains(e.target) && e.target !== mobileToggle) {
+            if(window.innerWidth <= 768 && sidebar.classList.contains('open') && !sidebar.contains(e.target) && e.target !== mobileToggle) {
                 sidebar.classList.remove('open');
             }
         });
