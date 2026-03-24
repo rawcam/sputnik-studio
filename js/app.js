@@ -1,7 +1,6 @@
 // app.js
-console.log('app.js started');
 (function() {
-    // Инициализируем модули (заглушки пока что)
+    // Инициализируем все модули
     Accordion.init();
     VideoModule.init();
     NetworkModule.init();
@@ -65,4 +64,3 @@ console.log('app.js started');
     initSidebarCollapse();
     initMobileMenu();
 })();
-console.log('app.js finished');
