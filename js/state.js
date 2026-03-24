@@ -1,77 +1,137 @@
-// state.js
-const AppState = (function() {
-    let state = {
-        globalSettings: {
-            resolution: '4K',
-            chroma: '422',
-            fps: 60,
-            colorSpace: 'YCbCr',
-            bitDepth: 10,
-            cable: 'Cat6',
-            multicast: false,
-            qos: false,
-            networkType: 'managed',
-            syncProtocol: 'ptp',
-            redundancy: false
-        },
-        paths: [],
-        projectSwitches: [],
-        ledConfig: {
-            activeMode: 'cabinets',
-            pitchIndex: 0,
-            cabinetPreset: '600x337.5',
-            cabinetWidth: 600,
-            cabinetHeight: 337.5,
-            cabinetsW: 1,
-            cabinetsH: 1,
-            targetResolution: 'fhd',
-            customResW: 1920,
-            customResH: 1080,
-            stitchedScreenId: null,
-            stitchCountW: 2,
-            stitchCountH: 1,
-            width_m: 0, height_m: 0, resW: 0, resH: 0, area: 0, power: 0
-        },
-        soundConfig: {
-            sensitivity: 89, sourcePower: 1, distance: 1, headroom: 9, roomGain: 3,
-            sourceType: 'point', startDistance: 1, endDistance: 16,
-            powerChangeFrom: 1, powerChangeTo: 2, activeMode: 'spl',
-            roomVolume: 200, roomArea: 100, avgAbsorption: 0.2,
-            roomLength: 10, roomWidth: 10, roomHeight: 3, speakerPower: 30, speakerSensitivity: 90, requiredSPL: 85
-        },
-        vcConfig: {
-            activeMode: 'codec',
-            codecPreset: 'trueconf',
-            resolution: '1080p',
-            fps: 30,
-            participants: 2,
-            multipointParticipants: 4
-        },
-        nextPathId: 1,
-        nextSwitchId: 1,
-        activePathId: null,
-        viewMode: 'single'
-    };
+// tracts.js
+const TractsModule = (function() {
+    let unsubscribe = null;
+    let currentViewMode = 'single'; // 'single', 'all'
 
-    const listeners = [];
+    function renderPathsList() {
+        const state = AppState.getState();
+        const paths = state.paths;
+        const activePathId = state.activePathId;
+        const listEl = document.getElementById('sidebarPathsList');
+        if (!listEl) return;
 
-    function getState() {
-        return state;
+        let html = '';
+        paths.forEach(path => {
+            const isActive = (activePathId === path.id);
+            html += `<li>
+                <div class="path-name ${isActive ? 'active' : ''}" data-path-id="${path.id}">${escapeHtml(path.name)}</div>
+                <div class="path-actions">
+                    <button class="rename-path" data-path-id="${path.id}" title="Переименовать"><i class="fas fa-pencil-alt"></i></button>
+                    <button class="delete-path" data-path-id="${path.id}" title="Удалить"><i class="fas fa-trash-alt"></i></button>
+                </div>
+            </li>`;
+        });
+        listEl.innerHTML = html;
+
+        // Навешиваем обработчики на элементы списка (делегирование)
+        listEl.querySelectorAll('.path-name').forEach(el => {
+            el.addEventListener('click', (e) => {
+                const id = parseInt(el.dataset.pathId);
+                setActivePath(id);
+            });
+        });
+        listEl.querySelectorAll('.rename-path').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const id = parseInt(btn.dataset.pathId);
+                renamePath(id);
+            });
+        });
+        listEl.querySelectorAll('.delete-path').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const id = parseInt(btn.dataset.pathId);
+                deletePath(id);
+            });
+        });
     }
 
-    function setState(updater) {
-        const newState = typeof updater === 'function' ? updater(state) : updater;
-        Object.assign(state, newState);
-        listeners.forEach(fn => fn(state));
+    function escapeHtml(str) {
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
     }
 
-    function subscribe(fn) {
-        listeners.push(fn);
-        return () => {
-            const index = listeners.indexOf(fn);
-            if (index !== -1) listeners.splice(index, 1);
-        };
+    function addPath() {
+        const state = AppState.getState();
+        const newId = state.nextPathId;
+        const newName = `Тракт ${newId}`;
+        AppState.setState({
+            paths: [...state.paths, { id: newId, name: newName, sourceDevices: [], sinkDevices: [] }],
+            nextPathId: newId + 1,
+            activePathId: newId,
+            viewMode: 'single'
+        });
     }
 
-    return { getState, setState, subscribe };
+    function renamePath(id) {
+        const state = AppState.getState();
+        const path = state.paths.find(p => p.id === id);
+        if (!path) return;
+        const newName = prompt('Новое название тракта:', path.name);
+        if (newName && newName.trim()) {
+            const newPaths = state.paths.map(p => p.id === id ? { ...p, name: newName.trim() } : p);
+            AppState.setState({ paths: newPaths });
+        }
+    }
+
+    function deletePath(id) {
+        const state = AppState.getState();
+        const path = state.paths.find(p => p.id === id);
+        if (!path) return;
+        if (confirm(`Удалить тракт "${path.name}"?`)) {
+            const newPaths = state.paths.filter(p => p.id !== id);
+            let newActivePathId = state.activePathId;
+            if (state.activePathId === id) {
+                newActivePathId = newPaths.length ? newPaths[0].id : null;
+            }
+            AppState.setState({
+                paths: newPaths,
+                activePathId: newActivePathId,
+                viewMode: newPaths.length === 0 ? 'single' : state.viewMode
+            });
+            // TODO: освободить порты устройств, если будут
+        }
+    }
+
+    function setActivePath(id) {
+        const state = AppState.getState();
+        if (state.activePathId === id) return;
+        AppState.setState({
+            activePathId: id,
+            viewMode: 'single'
+        });
+    }
+
+    function showAllTracts() {
+        AppState.setState({ viewMode: 'all' });
+    }
+
+    function init() {
+        // Подписываемся на изменения состояния
+        unsubscribe = AppState.subscribe((newState) => {
+            renderPathsList();
+            // Здесь будет рендеринг активного тракта или всех трактов
+            // Пока заглушка
+        });
+
+        // Навешиваем обработчики на кнопки управления трактами
+        const addPathBtn = document.getElementById('addPathBtnSidebar');
+        if (addPathBtn) addPathBtn.addEventListener('click', addPath);
+
+        const showAllBtn = document.getElementById('showAllTractsBtn');
+        if (showAllBtn) showAllBtn.addEventListener('click', showAllTracts);
+
+        // Первоначальная отрисовка
+        renderPathsList();
+    }
+
+    function destroy() {
+        if (unsubscribe) unsubscribe();
+    }
+
+    return { init, destroy };
 })();
