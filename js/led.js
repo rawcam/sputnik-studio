@@ -53,13 +53,14 @@ const LedModule = (function() {
                 </div>
             `;
         } else if (mode === 'stitching') {
+            const state = AppState.getState();
             const ledScreens = [];
             state.paths.forEach(path => {
                 [...path.sourceDevices, ...path.sinkDevices].forEach(dev => {
                     if (dev.type === 'ledScreen') ledScreens.push(dev);
                 });
             });
-            const screenOptions = ledScreens.map(s => `<option value="${s.id}" data-width="${s.width_m||0}" data-height="${s.height_m||0}" data-resw="${s.resW||0}" data-resh="${s.resH||0}">${s.name}</option>`).join('');
+            const screenOptions = ledScreens.map(s => `<option value="${s.id}" data-width="${s.width_m||0}" data-height="${s.height_m||0}" data-resw="${s.resW||0}" data-resh="${s.resH||0}" data-pitch="${s.pitch||0}" data-power="${s.powerPerSqm||0}">${s.name}</option>`).join('');
             html = `
                 <div class="calc-card">
                     <h3><i class="fas fa-object-group"></i> Сшивка LED-экранов</h3>
@@ -79,8 +80,7 @@ const LedModule = (function() {
 
         container.innerHTML = html;
         attachEventHandlers(mode);
-        // После рендера обновляем расчёты, но не вызываем setState, если значения не изменились
-        updateCalculations(mode, true); // передаём флаг, чтобы не вызывать setState в начале
+        updateCalculations(mode, true);
     }
 
     function attachEventHandlers(mode) {
@@ -154,7 +154,6 @@ const LedModule = (function() {
             const cW = parseInt(document.getElementById('cabinetsW')?.value) || 1;
             const cH = parseInt(document.getElementById('cabinetsH')?.value) || 1;
 
-            // Проверяем изменения
             if (ledConfig.pitchIndex !== pitchIdx) { ledConfig.pitchIndex = pitchIdx; changed = true; }
             if (ledConfig.cabinetPreset !== preset) { ledConfig.cabinetPreset = preset; changed = true; }
             if (ledConfig.cabinetWidth !== cabW) { ledConfig.cabinetWidth = cabW; changed = true; }
@@ -183,11 +182,104 @@ const LedModule = (function() {
             document.getElementById('cabPowerResult').innerText = Math.round(power);
 
         } else if (mode === 'resolution') {
-            // Аналогично с проверкой changed
-            // (код аналогичен, но для краткости опускаю, в финальном коде он будет полным)
-            // Здесь нужно добавить проверку changed для каждого параметра
+            const pitchIdx = parseInt(document.getElementById('resPitchSelect')?.value || 0);
+            const pitch = getLedScreenByIndex(pitchIdx).pitch;
+            const powerPerSqm = getLedScreenByIndex(pitchIdx).powerPerSqm;
+
+            const preset = document.getElementById('resCabinetPresetSelect')?.value || '600x337.5';
+            let cabW = 600, cabH = 337.5;
+            if (preset === 'custom') {
+                cabW = parseFloat(document.getElementById('resCabWidthCustom')?.value) || 600;
+                cabH = parseFloat(document.getElementById('resCabHeightCustom')?.value) || 337.5;
+            } else {
+                const [w, h] = preset.split('x').map(Number);
+                cabW = w; cabH = h;
+            }
+
+            const targetResSelect = document.getElementById('targetResolutionSelect')?.value || 'fhd';
+            let targetW = 1920, targetH = 1080;
+            if (targetResSelect === 'fhd') { targetW = 1920; targetH = 1080; }
+            else if (targetResSelect === '4k') { targetW = 3840; targetH = 2160; }
+            else if (targetResSelect === '8k') { targetW = 7680; targetH = 4320; }
+            else {
+                targetW = parseInt(document.getElementById('customResW')?.value) || 1920;
+                targetH = parseInt(document.getElementById('customResH')?.value) || 1080;
+            }
+
+            const pixPerCabW = cabW / pitch;
+            const pixPerCabH = cabH / pitch;
+            let cW = Math.ceil(targetW / pixPerCabW);
+            let cH = Math.ceil(targetH / pixPerCabH);
+            if (cW < 1) cW = 1;
+            if (cH < 1) cH = 1;
+
+            const realResW = Math.round(pixPerCabW * cW);
+            const realResH = Math.round(pixPerCabH * cH);
+            const width_m = (cW * cabW) / 1000;
+            const height_m = (cH * cabH) / 1000;
+            const area = width_m * height_m;
+            const power = area * powerPerSqm;
+
+            if (ledConfig.pitchIndex !== pitchIdx) { ledConfig.pitchIndex = pitchIdx; changed = true; }
+            if (ledConfig.cabinetPreset !== preset) { ledConfig.cabinetPreset = preset; changed = true; }
+            if (ledConfig.cabinetWidth !== cabW) { ledConfig.cabinetWidth = cabW; changed = true; }
+            if (ledConfig.cabinetHeight !== cabH) { ledConfig.cabinetHeight = cabH; changed = true; }
+            if (ledConfig.targetResolution !== targetResSelect) { ledConfig.targetResolution = targetResSelect; changed = true; }
+            if (ledConfig.customResW !== targetW) { ledConfig.customResW = targetW; changed = true; }
+            if (ledConfig.customResH !== targetH) { ledConfig.customResH = targetH; changed = true; }
+            if (ledConfig.width_m !== width_m) { ledConfig.width_m = width_m; changed = true; }
+            if (ledConfig.height_m !== height_m) { ledConfig.height_m = height_m; changed = true; }
+            if (ledConfig.resW !== realResW) { ledConfig.resW = realResW; changed = true; }
+            if (ledConfig.resH !== realResH) { ledConfig.resH = realResH; changed = true; }
+            if (ledConfig.area !== area) { ledConfig.area = area; changed = true; }
+            if (ledConfig.power !== power) { ledConfig.power = power; changed = true; }
+
+            document.getElementById('reqRes').innerHTML = `${targetW}×${targetH}`;
+            document.getElementById('realRes').innerHTML = `${realResW}×${realResH}`;
+            document.getElementById('resSize').innerHTML = `${width_m.toFixed(2)}×${height_m.toFixed(2)}`;
+            document.getElementById('resCabinetsCount').innerHTML = `${cW}×${cH}`;
+            document.getElementById('resArea').innerHTML = area.toFixed(2);
+            document.getElementById('resPower').innerHTML = Math.round(power);
+
         } else if (mode === 'stitching') {
-            // Аналогично
+            const select = document.getElementById('stitchScreenSelect');
+            const selectedId = select?.value;
+            let baseScreen = null;
+            if (selectedId) {
+                for (let path of state.paths) {
+                    baseScreen = [...path.sourceDevices, ...path.sinkDevices].find(d => d.id == selectedId && d.type === 'ledScreen');
+                    if (baseScreen) break;
+                }
+            }
+            if (baseScreen) {
+                const countW = parseInt(document.getElementById('stitchCountW')?.value) || 1;
+                const countH = parseInt(document.getElementById('stitchCountH')?.value) || 1;
+                const baseW_m = baseScreen.width_m || 0;
+                const baseH_m = baseScreen.height_m || 0;
+                const baseResW = baseScreen.resW || 0;
+                const baseResH = baseScreen.resH || 0;
+                const totalW_m = baseW_m * countW;
+                const totalH_m = baseH_m * countH;
+                const totalResW = baseResW * countW;
+                const totalResH = baseResH * countH;
+                const area = totalW_m * totalH_m;
+                const power = area * (baseScreen.powerPerSqm || 300);
+
+                if (ledConfig.stitchedScreenId !== selectedId) { ledConfig.stitchedScreenId = selectedId; changed = true; }
+                if (ledConfig.stitchCountW !== countW) { ledConfig.stitchCountW = countW; changed = true; }
+                if (ledConfig.stitchCountH !== countH) { ledConfig.stitchCountH = countH; changed = true; }
+                if (ledConfig.width_m !== totalW_m) { ledConfig.width_m = totalW_m; changed = true; }
+                if (ledConfig.height_m !== totalH_m) { ledConfig.height_m = totalH_m; changed = true; }
+                if (ledConfig.resW !== totalResW) { ledConfig.resW = totalResW; changed = true; }
+                if (ledConfig.resH !== totalResH) { ledConfig.resH = totalResH; changed = true; }
+                if (ledConfig.area !== area) { ledConfig.area = area; changed = true; }
+                if (ledConfig.power !== power) { ledConfig.power = power; changed = true; }
+
+                document.getElementById('stitchRes').innerHTML = `${totalResW}×${totalResH}`;
+                document.getElementById('stitchSize').innerHTML = `${totalW_m.toFixed(2)}×${totalH_m.toFixed(2)}`;
+                document.getElementById('stitchArea').innerHTML = area.toFixed(2);
+                document.getElementById('stitchPower').innerHTML = Math.round(power);
+            }
         }
 
         if (!skipSetState && changed) {
@@ -197,7 +289,7 @@ const LedModule = (function() {
 
     function showLedMode(mode) {
         const state = AppState.getState();
-        if (state.viewMode === 'led' && state.ledConfig.activeMode === mode) return; // уже в этом режиме
+        if (state.viewMode === 'led' && state.ledConfig.activeMode === mode) return;
         state.viewMode = 'led';
         state.ledConfig.activeMode = mode;
         AppState.setState(state);
