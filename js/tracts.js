@@ -1,11 +1,10 @@
-// tracts.js – стабильная версия, calculateAll не вызывает setState
+// tracts.js – стабильная версия (calculateAll не вызывает setState)
 const TractsModule = (function() {
     let unsubscribe = null;
     let currentModalCallback = null;
     let portManager = null;
     let isUpdating = false;
 
-    // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
     function createDevice(type, modelIndex, pathId, segment) {
         const utils = Utils;
         let model;
