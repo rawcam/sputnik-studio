@@ -1,4 +1,4 @@
-/* ========== СТИЛИ (обновлённая версия для v6.1.0) ========== */
+/* ========== СТИЛИ (финальная версия v6.1.0) ========== */
 * {
     margin: 0;
     padding: 0;
@@ -336,11 +336,11 @@ body {
     background: var(--bg-panel);
     border: 1px solid var(--border-light);
     border-radius: 12px;
-    padding: 8px 12px;
+    padding: 6px 10px;  /* уменьшено с 8px 12px */
     font-size: 0.85rem;
     color: var(--text-primary);
     font-family: inherit;
-    min-width: 140px;
+    min-width: 120px;
     transition: 0.2s;
 }
 
@@ -412,7 +412,7 @@ body {
     display: none;
 }
 
-/* ========== ОСНОВНАЯ ОБЛАСТЬ (улучшенная) ========== */
+/* ========== ОСНОВНАЯ ОБЛАСТЬ ========== */
 .main-content {
     flex: 1;
     padding: 20px;
@@ -425,8 +425,8 @@ body {
     max-width: calc(100% - var(--sidebar-collapsed-width));
 }
 
-/* Ограничение ширины контента и центрирование */
-.main-content > div {
+/* Ограничение ширины для калькуляторов, но не для трактов */
+.main-content > div:not(#activePathContainer):not(#allTractsContainer) {
     max-width: 960px;
     margin-left: auto;
     margin-right: auto;
@@ -478,7 +478,7 @@ body {
 }
 
 .calc-card .result-value {
-    font-size: 1.5rem;
+    font-size: 1.3rem;  /* чуть уменьшен с 1.5rem */
     font-weight: 700;
     color: var(--accent);
     line-height: 1.2;
@@ -499,7 +499,39 @@ body {
     line-height: 1.4;
 }
 
-/* ========== ОСТАЛЬНЫЕ ЭЛЕМЕНТЫ (тракты, пустые состояния, модалки) ========== */
+/* Специально для текстовых рекомендаций в ВКС */
+#vcNetworkReq {
+    font-size: 0.85rem;
+    font-weight: normal;
+    color: var(--text-secondary);
+}
+
+/* ========== ЭРГОНОМИКА ========== */
+.ergo-tabs {
+    display: flex;
+    gap: 8px;
+    border-bottom: 1px solid var(--border-light);
+    margin-bottom: 16px;
+}
+
+.ergo-tab {
+    padding: 6px 16px;
+    cursor: pointer;
+    border-radius: 16px 16px 0 0; /* уменьшено с 30px */
+    background: var(--card-bg);
+    color: var(--text-primary);
+}
+
+.ergo-tab.active {
+    background: var(--accent);
+    color: white;
+}
+
+.participant-coords input {
+    border-radius: 12px; /* явно задаём скругление */
+}
+
+/* ========== ОСТАЛЬНЫЕ ЭЛЕМЕНТЫ (тракты, модалки и т.д.) ========== */
 .path-card {
     background: var(--card-bg);
     border: 1px solid var(--border-light);
@@ -1112,26 +1144,6 @@ body.dark .power-control-wrapper label {
 
 .manage-buttons button {
     width: 100%;
-}
-
-.ergo-tabs {
-    display: flex;
-    gap: 8px;
-    border-bottom: 1px solid var(--border-light);
-    margin-bottom: 16px;
-}
-
-.ergo-tab {
-    padding: 6px 16px;
-    cursor: pointer;
-    border-radius: 30px 30px 0 0;
-    background: var(--card-bg);
-    color: var(--text-primary);
-}
-
-.ergo-tab.active {
-    background: var(--accent);
-    color: white;
 }
 
 .participant-list {
