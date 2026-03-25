@@ -11,6 +11,12 @@
     ErgoModule.init();
     StorageModule.init();
     LoggerModule.init();
+    PowerModule.init();
+
+// Обработчик кнопки
+document.getElementById('showPowerCalcBtn')?.addEventListener('click', () => {
+    PowerModule.showPowerCalculator();
+});
 
     function initTheme() {
         const themeSwitch = document.getElementById('themeSwitch');
