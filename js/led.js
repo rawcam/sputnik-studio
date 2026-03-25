@@ -6,6 +6,13 @@ const LedModule = (function() {
         return Utils.modelDB.ledScreen[index] || Utils.modelDB.ledScreen[0];
     }
 
+    // Вспомогательная функция для получения целого числа пикселей в кабинете
+    function getCabPixels(cabW_mm, cabH_mm, pitch_mm) {
+        const pixelsW = Math.floor(cabW_mm / pitch_mm);
+        const pixelsH = Math.floor(cabH_mm / pitch_mm);
+        return { pixelsW, pixelsH };
+    }
+
     function renderCalculator(mode) {
         const state = AppState.getState();
         const ledConfig = state.ledConfig;
@@ -29,7 +36,7 @@ const LedModule = (function() {
                         <div class="result-item"><div class="result-label">Площадь</div><div class="result-value" id="cabAreaResult">—</div><div>м²</div></div>
                         <div class="result-item"><div class="result-label">Потребляемая мощность</div><div class="result-value" id="cabPowerResult">—</div><div>Вт</div></div>
                     </div>
-                    <div class="ergo-info">Разрешение = (ширина кабинета / шаг) × кол-во кабинетов. Мощность = площадь × удельная мощность (Вт/м²).</div>
+                    <div class="ergo-info">Разрешение = (ширина кабинета / шаг) с округлением вниз × кол-во кабинетов. Мощность = площадь × удельная мощность (Вт/м²).</div>
                 </div>
             `;
         } else if (mode === 'resolution') {
@@ -49,7 +56,7 @@ const LedModule = (function() {
                         <div class="result-item"><div class="result-label">Площадь</div><div class="result-value" id="resArea">—</div><div>м²</div></div>
                         <div class="result-item"><div class="result-label">Мощность</div><div class="result-value" id="resPower">—</div><div>Вт</div></div>
                     </div>
-                    <div class="ergo-info">Система подбирает ближайшее количество кабинетов, покрывающее заданное разрешение (округляя вверх).</div>
+                    <div class="ergo-info">Система подбирает ближайшее количество кабинетов, покрывающее заданное разрешение, используя целое число пикселей в кабинете (округляя размер кабинета вниз).</div>
                 </div>
             `;
         } else if (mode === 'stitching') {
@@ -73,7 +80,7 @@ const LedModule = (function() {
                         <div class="result-item"><div class="result-label">Площадь</div><div class="result-value" id="stitchArea">—</div><div>м²</div></div>
                         <div class="result-item"><div class="result-label">Мощность</div><div class="result-value" id="stitchPower">—</div><div>Вт</div></div>
                     </div>
-                    <div class="ergo-info">Сшивка нескольких одинаковых LED-экранов в один логический экран.</div>
+                    <div class="ergo-info">Сшивка нескольких одинаковых LED-экранов в один логический экран. Используются целые разрешения исходных экранов.</div>
                 </div>
             `;
         }
@@ -142,32 +149,35 @@ const LedModule = (function() {
             const powerPerSqm = getLedScreenByIndex(pitchIdx).powerPerSqm;
 
             const preset = document.getElementById('cabinetPresetSelect')?.value || '600x337.5';
-            let cabW = 600, cabH = 337.5;
+            let cabW_mm = 600, cabH_mm = 337.5;
             if (preset === 'custom') {
-                cabW = parseFloat(document.getElementById('cabWidthCustom')?.value) || 600;
-                cabH = parseFloat(document.getElementById('cabHeightCustom')?.value) || 337.5;
+                cabW_mm = parseFloat(document.getElementById('cabWidthCustom')?.value) || 600;
+                cabH_mm = parseFloat(document.getElementById('cabHeightCustom')?.value) || 337.5;
             } else {
                 const [w, h] = preset.split('x').map(Number);
-                cabW = w; cabH = h;
+                cabW_mm = w; cabH_mm = h;
             }
 
             const cW = parseInt(document.getElementById('cabinetsW')?.value) || 1;
             const cH = parseInt(document.getElementById('cabinetsH')?.value) || 1;
 
-            if (ledConfig.pitchIndex !== pitchIdx) { ledConfig.pitchIndex = pitchIdx; changed = true; }
-            if (ledConfig.cabinetPreset !== preset) { ledConfig.cabinetPreset = preset; changed = true; }
-            if (ledConfig.cabinetWidth !== cabW) { ledConfig.cabinetWidth = cabW; changed = true; }
-            if (ledConfig.cabinetHeight !== cabH) { ledConfig.cabinetHeight = cabH; changed = true; }
-            if (ledConfig.cabinetsW !== cW) { ledConfig.cabinetsW = cW; changed = true; }
-            if (ledConfig.cabinetsH !== cH) { ledConfig.cabinetsH = cH; changed = true; }
+            // Вычисляем целое число пикселей в кабинете
+            const { pixelsW: pxW, pixelsH: pxH } = getCabPixels(cabW_mm, cabH_mm, pitch);
 
-            const width_m = (cW * cabW) / 1000;
-            const height_m = (cH * cabH) / 1000;
-            const resW = Math.round((cabW / pitch) * cW);
-            const resH = Math.round((cabH / pitch) * cH);
+            const width_m = (cW * cabW_mm) / 1000;
+            const height_m = (cH * cabH_mm) / 1000;
+            const resW = pxW * cW;
+            const resH = pxH * cH;
             const area = width_m * height_m;
             const power = area * powerPerSqm;
 
+            // Обновляем конфигурацию
+            if (ledConfig.pitchIndex !== pitchIdx) { ledConfig.pitchIndex = pitchIdx; changed = true; }
+            if (ledConfig.cabinetPreset !== preset) { ledConfig.cabinetPreset = preset; changed = true; }
+            if (ledConfig.cabinetWidth !== cabW_mm) { ledConfig.cabinetWidth = cabW_mm; changed = true; }
+            if (ledConfig.cabinetHeight !== cabH_mm) { ledConfig.cabinetHeight = cabH_mm; changed = true; }
+            if (ledConfig.cabinetsW !== cW) { ledConfig.cabinetsW = cW; changed = true; }
+            if (ledConfig.cabinetsH !== cH) { ledConfig.cabinetsH = cH; changed = true; }
             if (ledConfig.width_m !== width_m) { ledConfig.width_m = width_m; changed = true; }
             if (ledConfig.height_m !== height_m) { ledConfig.height_m = height_m; changed = true; }
             if (ledConfig.resW !== resW) { ledConfig.resW = resW; changed = true; }
@@ -187,13 +197,13 @@ const LedModule = (function() {
             const powerPerSqm = getLedScreenByIndex(pitchIdx).powerPerSqm;
 
             const preset = document.getElementById('resCabinetPresetSelect')?.value || '600x337.5';
-            let cabW = 600, cabH = 337.5;
+            let cabW_mm = 600, cabH_mm = 337.5;
             if (preset === 'custom') {
-                cabW = parseFloat(document.getElementById('resCabWidthCustom')?.value) || 600;
-                cabH = parseFloat(document.getElementById('resCabHeightCustom')?.value) || 337.5;
+                cabW_mm = parseFloat(document.getElementById('resCabWidthCustom')?.value) || 600;
+                cabH_mm = parseFloat(document.getElementById('resCabHeightCustom')?.value) || 337.5;
             } else {
                 const [w, h] = preset.split('x').map(Number);
-                cabW = w; cabH = h;
+                cabW_mm = w; cabH_mm = h;
             }
 
             const targetResSelect = document.getElementById('targetResolutionSelect')?.value || 'fhd';
@@ -206,24 +216,25 @@ const LedModule = (function() {
                 targetH = parseInt(document.getElementById('customResH')?.value) || 1080;
             }
 
-            const pixPerCabW = cabW / pitch;
-            const pixPerCabH = cabH / pitch;
-            let cW = Math.ceil(targetW / pixPerCabW);
-            let cH = Math.ceil(targetH / pixPerCabH);
+            // Целое количество пикселей в кабинете
+            const { pixelsW: pxW, pixelsH: pxH } = getCabPixels(cabW_mm, cabH_mm, pitch);
+
+            let cW = Math.ceil(targetW / pxW);
+            let cH = Math.ceil(targetH / pxH);
             if (cW < 1) cW = 1;
             if (cH < 1) cH = 1;
 
-            const realResW = Math.round(pixPerCabW * cW);
-            const realResH = Math.round(pixPerCabH * cH);
-            const width_m = (cW * cabW) / 1000;
-            const height_m = (cH * cabH) / 1000;
+            const realResW = pxW * cW;
+            const realResH = pxH * cH;
+            const width_m = (cW * cabW_mm) / 1000;
+            const height_m = (cH * cabH_mm) / 1000;
             const area = width_m * height_m;
             const power = area * powerPerSqm;
 
             if (ledConfig.pitchIndex !== pitchIdx) { ledConfig.pitchIndex = pitchIdx; changed = true; }
             if (ledConfig.cabinetPreset !== preset) { ledConfig.cabinetPreset = preset; changed = true; }
-            if (ledConfig.cabinetWidth !== cabW) { ledConfig.cabinetWidth = cabW; changed = true; }
-            if (ledConfig.cabinetHeight !== cabH) { ledConfig.cabinetHeight = cabH; changed = true; }
+            if (ledConfig.cabinetWidth !== cabW_mm) { ledConfig.cabinetWidth = cabW_mm; changed = true; }
+            if (ledConfig.cabinetHeight !== cabH_mm) { ledConfig.cabinetHeight = cabH_mm; changed = true; }
             if (ledConfig.targetResolution !== targetResSelect) { ledConfig.targetResolution = targetResSelect; changed = true; }
             if (ledConfig.customResW !== targetW) { ledConfig.customResW = targetW; changed = true; }
             if (ledConfig.customResH !== targetH) { ledConfig.customResH = targetH; changed = true; }
