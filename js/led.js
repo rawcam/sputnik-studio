@@ -1,27 +1,25 @@
 // led.js
 const LedModule = (function() {
     let unsubscribe = null;
+    let isUpdating = false; // флаг, предотвращающий рекурсивные обновления
 
-    // Получение данных модели по индексу
     function getLedScreenByIndex(index) {
         return Utils.modelDB.ledScreen[index] || Utils.modelDB.ledScreen[0];
     }
 
-    // Вычисление целого количества пикселей в кабинете
     function getCabPixels(cabW_mm, cabH_mm, pitch_mm) {
-        const pixelsW = Math.floor(cabW_mm / pitch_mm);
-        const pixelsH = Math.floor(cabH_mm / pitch_mm);
-        return { pixelsW, pixelsH };
+        return {
+            pixelsW: Math.floor(cabW_mm / pitch_mm),
+            pixelsH: Math.floor(cabH_mm / pitch_mm)
+        };
     }
 
-    // Рендеринг интерфейса в зависимости от выбранной вкладки
     function renderCalculator(activeTab = 'resolution') {
         const state = AppState.getState();
         const ledConfig = state.ledConfig;
         const container = document.getElementById('ledCalculatorContainer');
         if (!container) return;
 
-        // Списки для выбора шага и размера кабинета
         const pitchOptions = Utils.modelDB.ledScreen.map((m, i) =>
             `<option value="${i}" ${ledConfig.pitchIndex == i ? 'selected' : ''}>${m.name}</option>`
         ).join('');
@@ -34,7 +32,6 @@ const LedModule = (function() {
             <option value="custom" ${ledConfig.cabinetPreset == 'custom' ? 'selected' : ''}>Свой</option>
         `;
 
-        // Общая разметка
         container.innerHTML = `
             <div class="calc-card">
                 <div class="ergo-tabs" style="margin-bottom: 20px;">
@@ -42,7 +39,6 @@ const LedModule = (function() {
                     <div class="ergo-tab ${activeTab === 'cabinets' ? 'active' : ''}" data-tab="cabinets">По кабинетам</div>
                 </div>
 
-                <!-- Режим: По разрешению -->
                 <div id="resolutionTab" style="display: ${activeTab === 'resolution' ? 'block' : 'none'};">
                     <h3><i class="fas fa-bullseye"></i> Подбор количества кабинетов под заданное разрешение</h3>
                     <div class="setting"><label>Шаг пикселя:</label><select id="resPitchSelect">${pitchOptions}</select></div>
@@ -69,14 +65,9 @@ const LedModule = (function() {
                         <div class="result-item"><div class="result-label">Площадь</div><div class="result-value" id="resArea">—</div><div>м²</div></div>
                         <div class="result-item"><div class="result-label">Мощность</div><div class="result-value" id="resPower">—</div><div>Вт</div></div>
                     </div>
-                    <div class="ergo-info">
-                        • Количество пикселей в кабинете = округление вниз (размер_кабинета / шаг).<br>
-                        • Количество кабинетов = округление вверх (целевое_разрешение / пиксели_кабинета).<br>
-                        • Итоговое разрешение = пиксели_кабинета × количество_кабинетов.
-                    </div>
+                    <div class="ergo-info">Количество пикселей в кабинете = округление вниз (размер_кабинета / шаг). Количество кабинетов округляется вверх для покрытия разрешения.</div>
                 </div>
 
-                <!-- Режим: По кабинетам -->
                 <div id="cabinetsTab" style="display: ${activeTab === 'cabinets' ? 'block' : 'none'};">
                     <h3><i class="fas fa-th-large"></i> Расчёт по заданному количеству кабинетов</h3>
                     <div class="setting"><label>Шаг пикселя:</label><select id="cabPitchSelect">${pitchOptions}</select></div>
@@ -93,16 +84,12 @@ const LedModule = (function() {
                         <div class="result-item"><div class="result-label">Площадь</div><div class="result-value" id="cabAreaResult">—</div><div>м²</div></div>
                         <div class="result-item"><div class="result-label">Мощность</div><div class="result-value" id="cabPowerResult">—</div><div>Вт</div></div>
                     </div>
-                    <div class="ergo-info">
-                        • Количество пикселей в кабинете = округление вниз (размер_кабинета / шаг).<br>
-                        • Разрешение экрана = пиксели_кабинета × количество_кабинетов.<br>
-                        • Физические размеры = размер_кабинета × количество_кабинетов.
-                    </div>
+                    <div class="ergo-info">Количество пикселей в кабинете = округление вниз (размер_кабинета / шаг). Разрешение = пиксели_кабинета × кол-во кабинетов.</div>
                 </div>
             </div>
         `;
 
-        // Навешиваем обработчики на обе вкладки
+        // Навешиваем обработчики
         attachResolutionHandlers();
         attachCabinetsHandlers();
 
@@ -119,18 +106,18 @@ const LedModule = (function() {
                 if (tabName === 'resolution') {
                     resolutionTab.style.display = 'block';
                     cabinetsTab.style.display = 'none';
-                    updateResolutionCalculations();
+                    updateResolutionCalculations(true); // true = skipSetState
                 } else {
                     resolutionTab.style.display = 'none';
                     cabinetsTab.style.display = 'block';
-                    updateCabinetsCalculations();
+                    updateCabinetsCalculations(true);
                 }
             });
         });
 
-        // Первоначальный расчёт
-        if (activeTab === 'resolution') updateResolutionCalculations();
-        else updateCabinetsCalculations();
+        // Первичный расчёт
+        if (activeTab === 'resolution') updateResolutionCalculations(true);
+        else updateCabinetsCalculations(true);
     }
 
     function attachResolutionHandlers() {
@@ -139,7 +126,7 @@ const LedModule = (function() {
         if (presetSel) {
             presetSel.addEventListener('change', () => {
                 customDiv.style.display = presetSel.value === 'custom' ? 'block' : 'none';
-                updateResolutionCalculations();
+                updateResolutionCalculations(false);
             });
         }
         const targetResSel = document.getElementById('targetResolutionSelect');
@@ -147,13 +134,13 @@ const LedModule = (function() {
         if (targetResSel) {
             targetResSel.addEventListener('change', () => {
                 customResDiv.style.display = targetResSel.value === 'custom' ? 'block' : 'none';
-                updateResolutionCalculations();
+                updateResolutionCalculations(false);
             });
         }
         const inputs = ['resPitchSelect', 'resCabWidthCustom', 'resCabHeightCustom', 'customResW', 'customResH'];
         inputs.forEach(id => {
             const el = document.getElementById(id);
-            if (el) el.addEventListener('input', () => updateResolutionCalculations());
+            if (el) el.addEventListener('input', () => updateResolutionCalculations(false));
         });
     }
 
@@ -163,126 +150,144 @@ const LedModule = (function() {
         if (presetSel) {
             presetSel.addEventListener('change', () => {
                 customDiv.style.display = presetSel.value === 'custom' ? 'block' : 'none';
-                updateCabinetsCalculations();
+                updateCabinetsCalculations(false);
             });
         }
         const inputs = ['cabPitchSelect', 'cabWidthCustom', 'cabHeightCustom', 'cabinetsW', 'cabinetsH'];
         inputs.forEach(id => {
             const el = document.getElementById(id);
-            if (el) el.addEventListener('input', () => updateCabinetsCalculations());
+            if (el) el.addEventListener('input', () => updateCabinetsCalculations(false));
         });
     }
 
-    function updateResolutionCalculations() {
-        const pitchIdx = parseInt(document.getElementById('resPitchSelect')?.value || 0);
-        const pitch = getLedScreenByIndex(pitchIdx).pitch;
-        const powerPerSqm = getLedScreenByIndex(pitchIdx).powerPerSqm;
+    function updateResolutionCalculations(skipSetState = false) {
+        if (isUpdating) return;
+        isUpdating = true;
 
-        const preset = document.getElementById('resCabinetPresetSelect')?.value || '600x337.5';
-        let cabW_mm = 600, cabH_mm = 337.5;
-        if (preset === 'custom') {
-            cabW_mm = parseFloat(document.getElementById('resCabWidthCustom')?.value) || 600;
-            cabH_mm = parseFloat(document.getElementById('resCabHeightCustom')?.value) || 337.5;
-        } else {
-            const [w, h] = preset.split('x').map(Number);
-            cabW_mm = w; cabH_mm = h;
+        try {
+            const pitchIdx = parseInt(document.getElementById('resPitchSelect')?.value || 0);
+            const pitch = getLedScreenByIndex(pitchIdx).pitch;
+            const powerPerSqm = getLedScreenByIndex(pitchIdx).powerPerSqm;
+
+            const preset = document.getElementById('resCabinetPresetSelect')?.value || '600x337.5';
+            let cabW_mm = 600, cabH_mm = 337.5;
+            if (preset === 'custom') {
+                cabW_mm = parseFloat(document.getElementById('resCabWidthCustom')?.value) || 600;
+                cabH_mm = parseFloat(document.getElementById('resCabHeightCustom')?.value) || 337.5;
+            } else {
+                const [w, h] = preset.split('x').map(Number);
+                cabW_mm = w; cabH_mm = h;
+            }
+
+            const targetResSelect = document.getElementById('targetResolutionSelect')?.value || 'fhd';
+            let targetW = 1920, targetH = 1080;
+            if (targetResSelect === 'fhd') { targetW = 1920; targetH = 1080; }
+            else if (targetResSelect === '4k') { targetW = 3840; targetH = 2160; }
+            else if (targetResSelect === '8k') { targetW = 7680; targetH = 4320; }
+            else {
+                targetW = parseInt(document.getElementById('customResW')?.value) || 1920;
+                targetH = parseInt(document.getElementById('customResH')?.value) || 1080;
+            }
+
+            const { pixelsW, pixelsH } = getCabPixels(cabW_mm, cabH_mm, pitch);
+            const cabinetsW = Math.ceil(targetW / pixelsW);
+            const cabinetsH = Math.ceil(targetH / pixelsH);
+            const realW = pixelsW * cabinetsW;
+            const realH = pixelsH * cabinetsH;
+            const width_m = (cabinetsW * cabW_mm) / 1000;
+            const height_m = (cabinetsH * cabH_mm) / 1000;
+            const area = width_m * height_m;
+            const power = area * powerPerSqm;
+
+            document.getElementById('reqRes').innerHTML = `${targetW}×${targetH}`;
+            document.getElementById('realRes').innerHTML = `${realW}×${realH}`;
+            document.getElementById('resCabinetsCount').innerHTML = `${cabinetsW}×${cabinetsH}`;
+            document.getElementById('resSize').innerHTML = `${width_m.toFixed(2)}×${height_m.toFixed(2)}`;
+            document.getElementById('resArea').innerHTML = area.toFixed(2);
+            document.getElementById('resPower').innerHTML = Math.round(power);
+
+            if (!skipSetState) {
+                const state = AppState.getState();
+                const ledConfig = { ...state.ledConfig };
+                let changed = false;
+                if (ledConfig.pitchIndex !== pitchIdx) { ledConfig.pitchIndex = pitchIdx; changed = true; }
+                if (ledConfig.cabinetPreset !== preset) { ledConfig.cabinetPreset = preset; changed = true; }
+                if (ledConfig.cabinetWidth !== cabW_mm) { ledConfig.cabinetWidth = cabW_mm; changed = true; }
+                if (ledConfig.cabinetHeight !== cabH_mm) { ledConfig.cabinetHeight = cabH_mm; changed = true; }
+                if (ledConfig.targetResolution !== targetResSelect) { ledConfig.targetResolution = targetResSelect; changed = true; }
+                if (ledConfig.customResW !== targetW) { ledConfig.customResW = targetW; changed = true; }
+                if (ledConfig.customResH !== targetH) { ledConfig.customResH = targetH; changed = true; }
+                if (ledConfig.cabinetsW !== cabinetsW) { ledConfig.cabinetsW = cabinetsW; changed = true; }
+                if (ledConfig.cabinetsH !== cabinetsH) { ledConfig.cabinetsH = cabinetsH; changed = true; }
+                if (ledConfig.width_m !== width_m) { ledConfig.width_m = width_m; changed = true; }
+                if (ledConfig.height_m !== height_m) { ledConfig.height_m = height_m; changed = true; }
+                if (ledConfig.resW !== realW) { ledConfig.resW = realW; changed = true; }
+                if (ledConfig.resH !== realH) { ledConfig.resH = realH; changed = true; }
+                if (ledConfig.area !== area) { ledConfig.area = area; changed = true; }
+                if (ledConfig.power !== power) { ledConfig.power = power; changed = true; }
+                if (changed) AppState.setState({ ledConfig });
+            }
+        } finally {
+            isUpdating = false;
         }
-
-        const targetResSelect = document.getElementById('targetResolutionSelect')?.value || 'fhd';
-        let targetW = 1920, targetH = 1080;
-        if (targetResSelect === 'fhd') { targetW = 1920; targetH = 1080; }
-        else if (targetResSelect === '4k') { targetW = 3840; targetH = 2160; }
-        else if (targetResSelect === '8k') { targetW = 7680; targetH = 4320; }
-        else {
-            targetW = parseInt(document.getElementById('customResW')?.value) || 1920;
-            targetH = parseInt(document.getElementById('customResH')?.value) || 1080;
-        }
-
-        const { pixelsW, pixelsH } = getCabPixels(cabW_mm, cabH_mm, pitch);
-        const cabinetsW = Math.ceil(targetW / pixelsW);
-        const cabinetsH = Math.ceil(targetH / pixelsH);
-        const realW = pixelsW * cabinetsW;
-        const realH = pixelsH * cabinetsH;
-        const width_m = (cabinetsW * cabW_mm) / 1000;
-        const height_m = (cabinetsH * cabH_mm) / 1000;
-        const area = width_m * height_m;
-        const power = area * powerPerSqm;
-
-        document.getElementById('reqRes').innerHTML = `${targetW}×${targetH}`;
-        document.getElementById('realRes').innerHTML = `${realW}×${realH}`;
-        document.getElementById('resCabinetsCount').innerHTML = `${cabinetsW}×${cabinetsH}`;
-        document.getElementById('resSize').innerHTML = `${width_m.toFixed(2)}×${height_m.toFixed(2)}`;
-        document.getElementById('resArea').innerHTML = area.toFixed(2);
-        document.getElementById('resPower').innerHTML = Math.round(power);
-
-        // Сохраняем в состояние (для возможности экспорта)
-        const state = AppState.getState();
-        const ledConfig = { ...state.ledConfig };
-        ledConfig.pitchIndex = pitchIdx;
-        ledConfig.cabinetPreset = preset;
-        ledConfig.cabinetWidth = cabW_mm;
-        ledConfig.cabinetHeight = cabH_mm;
-        ledConfig.targetResolution = targetResSelect;
-        ledConfig.customResW = targetW;
-        ledConfig.customResH = targetH;
-        ledConfig.cabinetsW = cabinetsW;
-        ledConfig.cabinetsH = cabinetsH;
-        ledConfig.width_m = width_m;
-        ledConfig.height_m = height_m;
-        ledConfig.resW = realW;
-        ledConfig.resH = realH;
-        ledConfig.area = area;
-        ledConfig.power = power;
-        AppState.setState({ ledConfig });
     }
 
-    function updateCabinetsCalculations() {
-        const pitchIdx = parseInt(document.getElementById('cabPitchSelect')?.value || 0);
-        const pitch = getLedScreenByIndex(pitchIdx).pitch;
-        const powerPerSqm = getLedScreenByIndex(pitchIdx).powerPerSqm;
+    function updateCabinetsCalculations(skipSetState = false) {
+        if (isUpdating) return;
+        isUpdating = true;
 
-        const preset = document.getElementById('cabinetPresetSelect')?.value || '600x337.5';
-        let cabW_mm = 600, cabH_mm = 337.5;
-        if (preset === 'custom') {
-            cabW_mm = parseFloat(document.getElementById('cabWidthCustom')?.value) || 600;
-            cabH_mm = parseFloat(document.getElementById('cabHeightCustom')?.value) || 337.5;
-        } else {
-            const [w, h] = preset.split('x').map(Number);
-            cabW_mm = w; cabH_mm = h;
+        try {
+            const pitchIdx = parseInt(document.getElementById('cabPitchSelect')?.value || 0);
+            const pitch = getLedScreenByIndex(pitchIdx).pitch;
+            const powerPerSqm = getLedScreenByIndex(pitchIdx).powerPerSqm;
+
+            const preset = document.getElementById('cabinetPresetSelect')?.value || '600x337.5';
+            let cabW_mm = 600, cabH_mm = 337.5;
+            if (preset === 'custom') {
+                cabW_mm = parseFloat(document.getElementById('cabWidthCustom')?.value) || 600;
+                cabH_mm = parseFloat(document.getElementById('cabHeightCustom')?.value) || 337.5;
+            } else {
+                const [w, h] = preset.split('x').map(Number);
+                cabW_mm = w; cabH_mm = h;
+            }
+
+            const cabinetsW = parseInt(document.getElementById('cabinetsW')?.value) || 1;
+            const cabinetsH = parseInt(document.getElementById('cabinetsH')?.value) || 1;
+
+            const { pixelsW, pixelsH } = getCabPixels(cabW_mm, cabH_mm, pitch);
+            const resW = pixelsW * cabinetsW;
+            const resH = pixelsH * cabinetsH;
+            const width_m = (cabinetsW * cabW_mm) / 1000;
+            const height_m = (cabinetsH * cabH_mm) / 1000;
+            const area = width_m * height_m;
+            const power = area * powerPerSqm;
+
+            document.getElementById('cabResResult').innerHTML = `${resW}×${resH}`;
+            document.getElementById('cabSizeResult').innerHTML = `${width_m.toFixed(2)}×${height_m.toFixed(2)}`;
+            document.getElementById('cabAreaResult').innerHTML = area.toFixed(2);
+            document.getElementById('cabPowerResult').innerHTML = Math.round(power);
+
+            if (!skipSetState) {
+                const state = AppState.getState();
+                const ledConfig = { ...state.ledConfig };
+                let changed = false;
+                if (ledConfig.pitchIndex !== pitchIdx) { ledConfig.pitchIndex = pitchIdx; changed = true; }
+                if (ledConfig.cabinetPreset !== preset) { ledConfig.cabinetPreset = preset; changed = true; }
+                if (ledConfig.cabinetWidth !== cabW_mm) { ledConfig.cabinetWidth = cabW_mm; changed = true; }
+                if (ledConfig.cabinetHeight !== cabH_mm) { ledConfig.cabinetHeight = cabH_mm; changed = true; }
+                if (ledConfig.cabinetsW !== cabinetsW) { ledConfig.cabinetsW = cabinetsW; changed = true; }
+                if (ledConfig.cabinetsH !== cabinetsH) { ledConfig.cabinetsH = cabinetsH; changed = true; }
+                if (ledConfig.width_m !== width_m) { ledConfig.width_m = width_m; changed = true; }
+                if (ledConfig.height_m !== height_m) { ledConfig.height_m = height_m; changed = true; }
+                if (ledConfig.resW !== resW) { ledConfig.resW = resW; changed = true; }
+                if (ledConfig.resH !== resH) { ledConfig.resH = resH; changed = true; }
+                if (ledConfig.area !== area) { ledConfig.area = area; changed = true; }
+                if (ledConfig.power !== power) { ledConfig.power = power; changed = true; }
+                if (changed) AppState.setState({ ledConfig });
+            }
+        } finally {
+            isUpdating = false;
         }
-
-        const cabinetsW = parseInt(document.getElementById('cabinetsW')?.value) || 1;
-        const cabinetsH = parseInt(document.getElementById('cabinetsH')?.value) || 1;
-
-        const { pixelsW, pixelsH } = getCabPixels(cabW_mm, cabH_mm, pitch);
-        const resW = pixelsW * cabinetsW;
-        const resH = pixelsH * cabinetsH;
-        const width_m = (cabinetsW * cabW_mm) / 1000;
-        const height_m = (cabinetsH * cabH_mm) / 1000;
-        const area = width_m * height_m;
-        const power = area * powerPerSqm;
-
-        document.getElementById('cabResResult').innerHTML = `${resW}×${resH}`;
-        document.getElementById('cabSizeResult').innerHTML = `${width_m.toFixed(2)}×${height_m.toFixed(2)}`;
-        document.getElementById('cabAreaResult').innerHTML = area.toFixed(2);
-        document.getElementById('cabPowerResult').innerHTML = Math.round(power);
-
-        // Сохраняем в состояние
-        const state = AppState.getState();
-        const ledConfig = { ...state.ledConfig };
-        ledConfig.pitchIndex = pitchIdx;
-        ledConfig.cabinetPreset = preset;
-        ledConfig.cabinetWidth = cabW_mm;
-        ledConfig.cabinetHeight = cabH_mm;
-        ledConfig.cabinetsW = cabinetsW;
-        ledConfig.cabinetsH = cabinetsH;
-        ledConfig.width_m = width_m;
-        ledConfig.height_m = height_m;
-        ledConfig.resW = resW;
-        ledConfig.resH = resH;
-        ledConfig.area = area;
-        ledConfig.power = power;
-        AppState.setState({ ledConfig });
     }
 
     function showLedMode(mode) {
@@ -300,7 +305,6 @@ const LedModule = (function() {
         const ledContainer = document.getElementById('ledCalculatorContainer');
         ledContainer.style.display = '';
 
-        // Отображаем ту вкладку, которая была активна (или по умолчанию resolution)
         const activeTab = (mode === 'cabinets') ? 'cabinets' : 'resolution';
         renderCalculator(activeTab);
     }
