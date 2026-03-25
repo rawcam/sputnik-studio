@@ -1,9 +1,10 @@
-// storage.js
+// storage.js – полная версия с полем имени проекта и расширенным отчётом
 const StorageModule = (function() {
     let unsubscribe = null;
 
+    // Экранирование HTML
     function escapeHtml(str) {
-        if (!str) return '';
+        if (str == null) return '';
         return String(str).replace(/[&<>]/g, function(m) {
             if (m === '&') return '&amp;';
             if (m === '<') return '&lt;';
@@ -109,6 +110,7 @@ const StorageModule = (function() {
         input.click();
     }
 
+    // ========== НОВАЯ ФУНКЦИЯ ПЕЧАТИ ОТЧЁТА ==========
     function printReport() {
         const state = AppState.getState();
         const settings = state.globalSettings;
@@ -116,10 +118,10 @@ const StorageModule = (function() {
         const dateStr = now.toLocaleString();
         const version = '6.1.0';
 
-        // Имя проекта из localStorage или по умолчанию
+        // Получаем имя проекта из localStorage (сохраняется через поле ввода)
         let projectName = localStorage.getItem('sputnik_project_name') || 'Новый проект';
 
-        // Вспомогательные функции для пересчёта результатов
+        // Вспомогательные функции для пересчёта результатов звука
         function getSoundResults() {
             const cfg = state.soundConfig;
             const mode = cfg.activeMode;
@@ -178,18 +180,7 @@ const StorageModule = (function() {
             }
         }
 
-        function getErgoResults() {
-            return {
-                width_m: state.ledConfig.width_m,
-                height_m: state.ledConfig.height_m,
-                resW: state.ledConfig.resW,
-                resH: state.ledConfig.resH,
-                area: state.ledConfig.area,
-                power: state.ledConfig.power
-            };
-        }
-
-        // Собираем статистику по трактам
+        // Собираем тракты в таблицу
         let tractsHtml = '';
         if (state.paths.length === 0) {
             tractsHtml = '<p>Нет трактов</p>';
@@ -227,8 +218,16 @@ const StorageModule = (function() {
 
         const sound = getSoundResults();
         const vc = getVcResults();
-        const led = getErgoResults();
+        const led = {
+            width_m: state.ledConfig.width_m,
+            height_m: state.ledConfig.height_m,
+            resW: state.ledConfig.resW,
+            resH: state.ledConfig.resH,
+            area: state.ledConfig.area,
+            power: state.ledConfig.power
+        };
 
+        // Данные из виджетов
         const totalPower = document.getElementById('sidebarTotalPower')?.innerText || '0';
         const totalBTU = document.getElementById('sidebarTotalBTU')?.innerText || '0';
         const totalBitrate = document.getElementById('sidebarTotalBitrate')?.innerText || '0';
@@ -329,15 +328,15 @@ const StorageModule = (function() {
                     <h2>6. Акустический расчёт</h2>
                     <p><strong>Активный режим:</strong> ${sound.mode}</p>
                     <table>
-                        ${sound.mode === 'spl' ? `<tr><td>SPL на расстоянии ${sound.cfg.distance} м</td><td>${sound.results.spl} дБ</td></tr>` : ''}
-                        ${sound.mode === 'drop' ? `<tr><td>Падение SPL от ${sound.cfg.startDistance} до ${sound.cfg.endDistance} м</td><td>${sound.results.drop} дБ</td></tr>` : ''}
-                        ${sound.mode === 'power' ? `<tr><td>Изменение SPL при смене мощности</td><td>${sound.results.change} дБ</td></tr>` : ''}
-                        ${sound.mode === 'rt60' ? `<tr><td>Время реверберации RT60</td><td>${sound.results.rt60} с</td></tr>` : ''}
+                        ${sound.mode === 'spl' ? `<tr><th>SPL на расстоянии ${sound.cfg.distance} м</th><td>${sound.results.spl} дБ</td></tr>` : ''}
+                        ${sound.mode === 'drop' ? `<tr><th>Падение SPL от ${sound.cfg.startDistance} до ${sound.cfg.endDistance} м</th><td>${sound.results.drop} дБ</td></tr>` : ''}
+                        ${sound.mode === 'power' ? `<tr><th>Изменение SPL при смене мощности</th><td>${sound.results.change} дБ</td></tr>` : ''}
+                        ${sound.mode === 'rt60' ? `<tr><th>Время реверберации RT60</th><td>${sound.results.rt60} с</td></tr>` : ''}
                         ${sound.mode === 'speakers' ? `
-                            <tr><td>Площадь помещения</td><td>${sound.results.area} м²</td></tr>
-                            <tr><td>Количество громкоговорителей</td><td>${sound.results.count}</td></tr>
-                            <tr><td>Общая мощность</td><td>${sound.results.totalPower} Вт</td></tr>
-                            <tr><td>SPL в центре зоны</td><td>${sound.results.spl} дБ</td></tr>
+                            <tr><th>Площадь помещения</th><td>${sound.results.area} м²</td></tr>
+                            <tr><th>Количество громкоговорителей</th><td>${sound.results.count}</td></tr>
+                            <tr><th>Общая мощность</th><td>${sound.results.totalPower} Вт</td></tr>
+                            <tr><th>SPL в центре зоны</th><td>${sound.results.spl} дБ</td></tr>
                         ` : ''}
                     </table>
                     <div class="subnote">Параметры расчёта соответствуют последним выбранным настройкам в разделе SOUND.</div>
@@ -348,11 +347,11 @@ const StorageModule = (function() {
                     <p><strong>Режим:</strong> ${vc.mode === 'codec' ? 'P2P-конференция' : 'Многоточечный вызов'}</p>
                     <table>
                         ${vc.mode === 'codec' ? `
-                            <tr><td>Рекомендуемый битрейт отправки</td><td>${vc.up} Мбит/с</td></tr>
-                            <tr><td>Рекомендуемый битрейт приёма</td><td>${vc.down} Мбит/с</td></tr>
+                            <tr><th>Рекомендуемый битрейт отправки</th><td>${vc.up} Мбит/с</td></tr>
+                            <tr><th>Рекомендуемый битрейт приёма</th><td>${vc.down} Мбит/с</td></tr>
                         ` : `
-                            <tr><td>Битрейт на одного участника</td><td>${vc.perUser} Мбит/с</td></tr>
-                            <tr><td>Суммарный битрейт (MCU)</td><td>${vc.total} Мбит/с</td></tr>
+                            <tr><th>Битрейт на одного участника</th><td>${vc.perUser} Мбит/с</td></tr>
+                            <tr><th>Суммарный битрейт (MCU)</th><td>${vc.total} Мбит/с</td></tr>
                         `}
                     </table>
                     <div class="subnote">Расчёт выполнен для выбранных параметров (кодек, разрешение, FPS, количество участников).</div>
@@ -390,7 +389,6 @@ const StorageModule = (function() {
     function resetProject() {
         if (confirm('Сбросить все данные? Текущий проект будет удалён.')) {
             localStorage.removeItem('sputnik_studio_project');
-            localStorage.removeItem('sputnik_project_name');
             location.reload();
         }
     }
@@ -430,7 +428,6 @@ const StorageModule = (function() {
                 console.error(e);
             }
         } else {
-            // Нет сохранённого проекта – состояние уже пустое, ничего не создаём.
             const state = AppState.getState();
             if (state.paths.length === 0) {
                 if (state.viewMode !== 'single') AppState.setState({ viewMode: 'single' });
@@ -438,6 +435,7 @@ const StorageModule = (function() {
             }
         }
 
+        // Подписка на изменения состояния
         unsubscribe = AppState.subscribe(() => {});
 
         // Обработчики кнопок управления
@@ -453,7 +451,7 @@ const StorageModule = (function() {
             window.open('wiki.html', '_blank');
         });
 
-        // Загрузка и сохранение имени проекта
+        // Сохранение имени проекта из поля ввода
         const projectNameInput = document.getElementById('projectNameInput');
         if (projectNameInput) {
             const savedName = localStorage.getItem('sputnik_project_name');
