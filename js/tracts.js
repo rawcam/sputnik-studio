@@ -787,5 +787,5 @@ const TractsModule = (function() {
         });
     }
 
-    return { init, destroy };
+    return { init, destroy, addNewPath, calculateAll };
 })();
